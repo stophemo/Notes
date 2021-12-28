@@ -142,7 +142,7 @@ Promise实例创建后 会`立即执行`，无法中途取消
 
 ## HTTP请求状态码
 
-![](Lego.assets/http状态码.png)
+![](assets/http状态码.png)
 
 
 
