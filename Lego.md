@@ -125,18 +125,83 @@ Promise实例创建后 会`立即执行`，无法中途取消
 
 ### 基本用法
 
+`Promise`构造函数接受一个函数作为参数，该函数的两个参数分别是`resolve`和`reject`。它们是两个函数，由 JavaScript 引擎提供，不用自己部署。
+
 `resolve`函数的作用是，将`Promise`对象的状态从“未完成”变为“成功”（即从 pending 变为 resolved），在异步操作成功时调用，并将异步操作的结果，作为参数传递出去
 
 `reject`函数的作用是，将`Promise`对象的状态从“未完成”变为“失败”（即从 pending 变为 rejected），在异步操作失败时调用，并将异步操作报出的错误，作为参数传递出去。
 
-`then`方法可以接受两个回调函数作为参数。
+```js
+// pending
+const p1 = new Promise((resolve, reject) => {});
+console.log('p1', p1);
+// pending -> resolved
+const p2 = new Promise((resolve, reject) => {
+  resolve();
+});
+console.log('p2', p2);
+// pending -> reject
+const p3 = new Promise((resolve, reject) => {
+  reject();
+});
+console.log('p3', p3);
+```
+
+<img src="assets/image-20211229004238409.png"/> 
+
+### Promise.prototype.then()
+
+`then`方法可以接受两个回调函数作为参数。在状态变更后执行
 
 - 第一个回调函数是`Promise`对象的状态变为`resolved`时调用
 - 第二个回调函数是`Promise`对象的状态变为`rejected`时调用。
 - 这两个函数都是可选的，不一定要提供。
-- 它们都接受`Promise`对象传出的值作为参数。
+- 它们都接受`Promise`对象传出的值作为参数。、
+- `then`方法指定的回调函数是异步的
+
+- `then`方法返回的是一个新的`Promise`实例。因此可以采用链式写法，即`then`方法后面再调用另一个`then`方法
+
+### Promise.prototype.catch()
+
+`Promise.prototype.catch()`方法是`.then(null, rejection)`或`.then(undefined, rejection)`的别名，用于指定发生错误时的回调函数。
 
 
+
+```js
+const p1 = Promise.resolve();
+console.log('p1', p1);
+// 没有抛出异常，promise.then/promise.catch 返回的resolved状态的promise
+const res1 = p1.then(() => {
+  console.log('p1 then');
+});
+setTimeout(() => {
+  console.log('res1', res1);
+});
+// 抛出异常，promise.then/promise.catch 返回的rejected状态的promise
+const res2 = p1.then(() => {
+  throw new Error('err');
+});
+setTimeout(() => {
+  console.log('res2', res2);
+});
+```
+
+```js
+const p = Promise.resolve();
+p.then(() => {
+  console.log(1);
+  throw new Error();
+ })
+ .catch(() => {
+  console.log(2);
+ })
+ .then(() => {
+   console.log(3);
+ });
+//1
+//2
+//3
+```
 
 
 
