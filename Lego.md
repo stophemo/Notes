@@ -238,3 +238,139 @@ promise.then(
 ## 挂载
 
 *将组件渲染，并且构造 DOM 元素然后塞入页面的过程称为组件的挂载*
+
+
+
+## Array
+
+### forEach()
+
+`forEach()` 方法对数组的每个元素执行一次给定的函数。
+
+```js
+const items = ['item1', 'item2', 'item3'];
+const copy = [];
+
+// before
+for (let i=0; i<items.length; i++) {
+  copy.push(items[i]);
+}
+
+// after
+items.forEach(function(item){
+  copy.push(item);
+});
+```
+
+
+
+## 本地存储
+
+### cookie
+
+#### 使用方式
+
+
+
+### localStorage
+
+
+
+### sessionStorage
+
+
+
+
+
+
+
+
+
+
+
+
+
+## TypeScript
+
+### 简介
+
+`TypeScript`是`JavaScript`的`超集`
+
+TS 与 JS 的关系 如同 Less/Sass 与 css的关系
+
+就像Less/Sass是对CSS进行扩展一样, TS也是对JS进行扩展
+
+就像Less/Sass最终会转换成CSS一样, 我们编写好的TS代码最终也会换成JS
+
+### 为什么需要TypeScript？
+
+`JavaScript`是`弱类型`, 很多错误只有在运行时才会被发现
+
+`TypeScript`提供了一套`静态检测机制`, 可以帮助我们在编译时就发现错误
+
+#### 运行时 
+
+所谓运行时就是代码跑起来了,被装载到`内存`中去了
+
+#### 编译时
+
+`编译`，就是编译器帮你把源代码翻译成机器能识别的代码，这时的错误就叫编译时错误,这个过程中做的啥类型检查也就叫编译时类型检查,或`静态类型检查`(所谓静态嘛就是没把真把代码放内存中运行起来,而只是把代码当作文本来扫描下)
+
+### TypeScript特点
+
+- 支持最新的JavaScript新特特性
+- 支持代码静态检查
+- 支持诸如C,C++,Java,Go等后端语言中的特性 (枚举、泛型、类型转换、命名空间、声明文件、类、接口等)
+
+### 搭建环境
+
+#### 安装最新版typescript
+
+```git
+npm i -g typescript
+```
+
+#### 安装ts-node
+
+```
+npm i -g ts-node
+```
+
+#### 创建一个 tsconfig.json 文件
+
+```
+tsc --init
+```
+
+**然后新建index.ts,输入相关练习代码，然后执行 ts-node index.ts**
+
+**官方也提供了一个在线开发 TypeScript 的云环境——[Playground](https://link.juejin.cn/?target=https%3A%2F%2Fwww.typescriptlang.org%2Fzh%2Fplay)。**
+
+
+
+### 基本数据类型
+
+```tsx
+//JS 原始数据类型
+let str: string = "jack";
+let num: number = 24;
+let bool: boolean = false;
+let u: undefined = undefined;
+let n: null = null;
+let big: bigint = 100n;
+let sym: symbol = Symbol("me"); 
+// JS 引用数据类型
+let obj: object = {x: 1};
+```
+
+#### Tips：
+
+默认情况下 `null` 和 `undefined` 是所有类型的子类型。 就是说你可以把 `null` 和 `undefined` 赋值给其他类型。
+
+严格模式下 `"strictNullChecks":true` ，`null` 和 `undefined` 只能赋值给 `void` 和它们各自的类型。
+
+类型不兼容 ts(2322)错误
+
+
+
+### 其他类型
