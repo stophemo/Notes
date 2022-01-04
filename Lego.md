@@ -342,7 +342,7 @@ npm i -g ts-node
 tsc --init
 ```
 
-**然后新建index.ts,输入相关练习代码，然后执行 ts-node index.ts**
+**然后新建index.ts,输入相关练习代码，然后执行 `ts-node index.ts`**
 
 **官方也提供了一个在线开发 TypeScript 的云环境——[Playground](https://link.juejin.cn/?target=https%3A%2F%2Fwww.typescriptlang.org%2Fzh%2Fplay)。**
 
@@ -377,6 +377,232 @@ let obj: object = {x: 1};
 
 
 
+#### Array
+
+##### 定义方式
+
+```ts
+let arr: string[] = ['1', '2'];
+let arr2: Array<string> = ['1', '2'];
+```
+
+##### 定义联合类型数组
+
+```tsx
+let arr:(number | string)[];
+// 表示定义了一个名称叫做arr的数组, 
+// 这个数组中将来既可以存储数值类型的数据, 也可以存储字符串类型的数据
+arr3 = [1, 'b', 2, 'c'];
+```
+
+##### 定义对象数组
+
+```tsx
+interface Arrobj { 
+  name: string,
+  age: number
+}
+let arr4: Arrobj[] = [{ name: 'jack', age: 22 }];
+```
+
+
+
+#### 函数
+
+##### 函数声明
+
+```tsx
+function sum(x: number, y: number): number {
+    return x + y;
+}
+```
+
+##### 函数表达式
+
+`完整写法`
+
+```tsx
+//(x: number, y: number) => number 表示当前这个函数的类型
+// function (x: number, y: number): number {return x + y;};  就相当于符合上面条件的返回值
+let mySum: (x: number, y: number) => number = function (x: number, y: number): number {
+    return x + y;
+};
+```
+
+##### 用接口定义函数**类型**
+
+```tsx
+interface SearchFunc{
+  (source: string, subString: string): boolean;
+}
+
+let mySearch: SearchFunc;
+mySearch = function(source: string,subString:string){
+     return source.search(subString) !== -1  
+}
+```
+
+##### 可选参数
+
+```tsx
+function sum(x: number, y: number, z?:number): number {
+    return x + y;
+}
+```
+
+**注意点：可选参数后面不允许再出现必需参数**
+
+##### 参数默认值
+
+```tsx
+function sum(x: number, y: number, z:number=3): number {
+    return x + y + z;
+}
+```
+
+##### 剩余参数
+
+```ts
+function push(array: any[], ...items: any[]) {
+    items.forEach(function(item) {
+        array.push(item);
+    });
+}
+let a = [];
+push(a, 1, 2, 3);
+```
+
+##### 函数重载
+
+```ts
+function add(x, y) {
+ return x + y;
+}
+add(1, 2); // 3
+add("1", "2"); //"12"
+```
+
+TypeScript 编译器开启 `noImplicitAny` 的配置项时 ,以上代码会提示以下错误信息：`Parameter 'y' implicitly has an 'any' type`  该信息告诉我们参数 x 和参数 y 隐式具有 `any` 类型
+
+修改如下：
+
+```tsx
+type Combinable = string | number
+
+function add(a: Combinable, b: Combinable) {
+  if (typeof a === 'string' || typeof b === 'string') {
+   return a.toString() + b.toString();
+  }
+  return a + b;
+}
+console.log("add(1, 2)", add(1, 2),"add('1', '2')",add('1', '2'))
+```
+
+我们把结果保存到一个名为 `result` 的变量上，这时候我们想当然的认为此时 `result` 的变量的类型为 `string` 我们就可以正常调用字符串对象上的 `split` 方法
+
+```tsx
+const result = add('aaa', ' bbb')
+console.log(result.split(' '));
+```
+
+这时 TypeScript 编译器又出现以下错误信息了：
+
+```
+Property 'split' does not exist on type 'string | number'.
+Property 'split' does not exist on type 'number'.
+```
+
+很明显 `number` 类型的对象上并不存在 `split` 属性。问题又来了，那如何解决呢？这时我们就可以利用 TypeScript 提供的`函数重载`特性。
+
+**函数重载或方法重载 是使用 `相同名称` 和 `不同参数数量或类型` 创建`多个方法` 的 一种能力**
+
+```tsx
+type Types = number | string
+function add(a: number, b: number): number
+function add(a: string, b: string): string
+function add(a: string, b: number): string
+function add(a: number, b: string): string
+function add(a: Types, b: Types) {
+  if (typeof a === 'string' || typeof b === 'string') {
+    return a.toString() + b.toString()
+  }
+  return a + b
+}
+const result = add('aaa', ' bbb')
+console.log(result.split(' '))
+```
+
+
+
+
+
+#### Tuple(元组)
+
+##### 定义
+
+众所周知，数组一般由同种类型的值组成，但有时我们需要在单个变量中存储不同类型的值，这时候我们就可以使用元组。
+
+在 JavaScript 中是没有元组的，元组是 TypeScript 中特有的类型，其工作方式类似于数组。
+
+元组最重要的特性是可以限制`数组元素的个数和类型`，它特别适合用来实现多值返回。
+
+```tsx
+let x: [string, number]; 
+// 类型必须匹配且个数必须为2
+
+x = ['hello', 10]; // OK 
+x = ['hello', 10,10]; // Error 
+x = [10, 'hello']; // Error
+```
+
+注意，元组类型只能表示一个已知元素数量和类型的数组，长度已指定，越界访问会提示错误。如果一个数组中可能有多种类型，数量和类型都不确定，那就直接`any[]`
+
+
+
+##### 元组类型的解构赋值
+
+```tsx
+let employee: [number, string] = [1, "Semlinker"];
+let [id, username] = employee;
+console.log(`id: ${id}`);
+console.log(`username: ${username}`);
+```
+
+##### 元组类型的可选元素
+
+与函数签名类型类似，在定义元组类型时，我们也可以通过 `?` 号来声明元组类型的可选元素，具体的示例如下：
+
+```ts
+let optionalTuple: [string, boolean?];
+optionalTuple = ["Semlinker", true];
+console.log(`optionalTuple : ${optionalTuple}`);
+optionalTuple = ["Kakuqo"];
+console.log(`optionalTuple : ${optionalTuple}`);
+```
+
+
+
+##### 元组类型的剩余元素
+
+
+
+##### 只读的元组类型
+
+
+
+#### void
+
+
+
+#### never
+
+
+
+#### any
+
+
+
+#### unknown
 
 
 
@@ -386,12 +612,7 @@ let obj: object = {x: 1};
 
 
 
-
-
-
-
-
-
+### 类型推断
 
 
 
@@ -409,7 +630,7 @@ let obj: object = {x: 1};
 
 ### `.git` 结构
 
-#### 1. 文件 COMMIT_EDITMSG
+#### 1.COMMIT_EDITMSG
 
 
 
@@ -417,7 +638,11 @@ let obj: object = {x: 1};
 
 实际应用： `git pull` 远程仓库后，新增了很多提交，淹没了本地提交记录，直接 `cat .git/COMMIT_EDITMSG` 就可以弄清楚最后工作的位置了
 
-#### 2. 文件 HEAD
+#### 2.index 
 
-此文件**永远**存储当前位置指针，就像 linux 中的 `$PWD` 变量和命令提示符的箭头一样，永远指向当前位置，表明当前的工作位置。在 `git` 中 `HEAD` 永远指向当前正在工作的那个 `commit`。
+暂存区
+
+#### 3.object
+
+ commit后，通过 ANSI[扩展自 ASCII 的编码方式] 编码 后的文件 （本地仓库）
 
