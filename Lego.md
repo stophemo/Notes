@@ -620,29 +620,3 @@ console.log(`optionalTuple : ${optionalTuple}`);
 
 
 
-
-
-## git运作机制
-
-### `.git` 文件夹创建
-
-任意文件夹中，用 `git init` 命令初始化仓库，即可在此文件夹下创建 `.git` 文件夹（`.`打头为隐藏文件夹，所以平时可能看不到）。这个文件夹之外的部分叫做工作区（Working Directory），`.git` 文件夹我们称做 Git仓库 (Git Repository)。
-
-### `.git` 结构
-
-#### 1.COMMIT_EDITMSG
-
-
-
-此文件是一个临时文件，存储最后一次提交的信息内容，`git commit` 命令之后打开的编辑器就是在编辑此文件，而你退出编辑器后，`git` 会把此文件内容写入 commit 记录。
-
-实际应用： `git pull` 远程仓库后，新增了很多提交，淹没了本地提交记录，直接 `cat .git/COMMIT_EDITMSG` 就可以弄清楚最后工作的位置了
-
-#### 2.index 
-
-暂存区
-
-#### 3.object
-
- commit后，通过 ANSI[扩展自 ASCII 的编码方式] 编码 后的文件 （本地仓库）
-
