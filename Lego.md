@@ -562,10 +562,10 @@ x = [10, 'hello']; // Error
 ##### 元组类型的解构赋值
 
 ```tsx
-let employee: [number, string] = [1, "Semlinker"];
-let [id, username] = employee;
-console.log(`id: ${id}`);
-console.log(`username: ${username}`);
+let x: [string, number] = ['hello', 10];
+let [a, b] = x;
+console.log(`a:${a}`);
+console.log(`b:${b}`);
 ```
 
 ##### 元组类型的可选元素
@@ -573,20 +573,26 @@ console.log(`username: ${username}`);
 与函数签名类型类似，在定义元组类型时，我们也可以通过 `?` 号来声明元组类型的可选元素，具体的示例如下：
 
 ```ts
-let optionalTuple: [string, boolean?];
-optionalTuple = ["Semlinker", true];
-console.log(`optionalTuple : ${optionalTuple}`);
-optionalTuple = ["Kakuqo"];
-console.log(`optionalTuple : ${optionalTuple}`);
+type Point = [number, number?, number?];
+
+const x: Point = [10]; // 一维坐标点
+const xy: Point = [10, 20]; // 二维坐标点
+const xyz: Point = [10, 20, 30]; // 三维坐标点
+
+console.log(x.length); // 1
+console.log(xy.length); // 2
+console.log(xyz.length); // 3
 ```
-
-
 
 ##### 元组类型的剩余元素
 
+```tsx
+type RestTupleType = [number, ...string[]];
+let restTuple: RestTupleType = [666, "Semlinker", "Kakuqo", "Lolo"];
+console.log(restTuple);
+```
 
 
-##### 只读的元组类型
 
 
 
