@@ -282,6 +282,26 @@ for (var i =1; i<arr.length ; i++){
 
 ![image-20210717135528535](assets\image-20210717135528535.png)
 
+
+
+##### 7.数组方法
+
+###### find（）
+
+```js
+var ages = [3, 10, 18, 20];
+ 
+function checkAdult(age) {
+    return age >= 18;
+}
+ 
+function myFunction() {
+    document.getElementById("demo").innerHTML = ages.find(checkAdult);
+}
+```
+
+
+
 #### 排序
 
 ##### 1.冒泡排序
