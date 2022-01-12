@@ -130,6 +130,18 @@
 
 # Vue3
 
+
+
+**2020 年 9 月，Vue 3.0 正式发布，这一版本为什么要重头开始写？亦或说重构之后的 Vue 3 解决了此前哪些必须解决的问题？**
+
+**尤雨溪：**重写的主要原因一个是类型系统，一个是内部逻辑分层。Vue 2 项目先基于 JavaScript，中期加入了 Flow 做类型检查，导致类型覆盖不完整。Flow 本身又破坏性更新频繁，工具链支持也不理想，所以决定转为用 TypeScript 重写。Vue 2 的内部逻辑分层不够清晰，对于长期维护是一个负担，这也是一个不重写就很难彻底改善的问题。
+
+## vue-cli
+
+单页面应用 (SPA) 
+
+
+
 ## Vite
 
 `vite`是尤雨溪团队开发的新一代的前端构建工具，意图取代**webpack**
@@ -140,7 +152,7 @@
 - 即时热模块更换（HMR，热更新）
 - 真正的按需编译
 
-### 与``webpack`对比
+### 与`webpack`对比
 
 #### `webpack`
 
@@ -156,24 +168,112 @@
 
 ### 使用
 
-> //要构建一个 Vite + Vue 项目，运行，使用 NPM:npm init @vitejs/app 项目名
-> //使用 Yarn:
-> yarn create @vitejs/app 项目名
+使用npm
 
-> 你会觉得非常快速的创建了项目，然而它并没有给你下载依赖，你还有进入文件然后
-> npm install (or yarn)
+```
+# npm 7+，需要加上额外的双短横线
+$ npm init vite@latest <project-name> -- --template vue
+```
+
+使用yarn
+
+```
+$ yarn create vite <project-name> --template vue
+```
 
 
 
-#### 打开方式
+## Vetur报组件未导出
+
+**解决办法：**
+
+
+
+**1) 更换支持ts的语法高亮插件 \**Volar \*\*以取代 \*\*Vetur \*\*(推荐此方法)\*\*\*\*\*\**\***
+
+
+
+**2) 不用 \**script setup \*\*语法糖，改用 \*\*Options API \*\*写法(不建议)\*\*\*\*\*\**\***
+
+![img](assets/1318601-20211122173713983-66635190.png)
+
+
+
+## methods
+
+Vue 自动为 `methods` 绑定 `this`，以便于它始终指向组件实例。这将确保方法在用作事件监听或回调时保持正确的 `this` 指向。在定义 `methods` 时应避免使用箭头函数，因为这会阻止 Vue 绑定恰当的 `this` 指向。
+
+
+
+## 事件处理
+
+### 多事件处理
+
+```vue
+<!-- 这两个 one() 和 two() 将执行按钮点击事件 -->
+<button @click="one($event), two($event)">
+  Submit
+</button>
+```
+
+```vue
+// ...
+methods: {
+  one(event) {
+    // 第一个事件处理器逻辑...
+  },
+  two(event) {
+   // 第二个事件处理器逻辑...
+  }
+}
+```
+
+### 事件修饰符
+
+```vue
+<!-- 阻止单击事件继续冒泡 -->
+<a @click.stop="doThis"></a>
+
+<!-- 提交事件不再重载页面 -->
+<form @submit.prevent="onSubmit"></form>
+
+<!-- 修饰符可以串联 -->
+<a @click.stop.prevent="doThat"></a>
+
+<!-- 只有修饰符 -->
+<form @submit.prevent></form>
+
+<!-- 添加事件监听器时使用事件捕获模式 -->
+<!-- 即内部元素触发的事件先在此处理，然后才交由内部元素进行处理 -->
+<div @click.capture="doThis">...</div>
+
+<!-- 只当在 event.target 是当前元素自身时触发处理函数 -->
+<!-- 即事件不是从内部元素触发的 -->
+<div @click.self="doThat">...</div>
+```
+
+> 使用修饰符时，顺序很重要；相应的代码会以同样的顺序产生。因此，用 `v-on:click.prevent.self` 会阻止所有的点击，
+>
+> 而 `v-on:click.self.prevent` 只会阻止对元素自身的点击。
+
+```vue
+<!-- 点击事件将只会触发一次 -->
+<a @click.once="doThis"></a>
+```
+
+
+
+
+
+## vue3 变化
+
+### 打开方式
 
 不是 `serve` 变成了`dev`
 
 ![1636687125(1).png](assets/37464be282ed4d20bac0a27a680c0a52tplv-k3u1fbpfcp-watermark.awebp)
 
 
-
-## vue3 变化
 
 ### main.js
 
