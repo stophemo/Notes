@@ -199,67 +199,7 @@ $ yarn create vite <project-name> --template vue
 
 
 
-## methods
 
-Vue 自动为 `methods` 绑定 `this`，以便于它始终指向组件实例。这将确保方法在用作事件监听或回调时保持正确的 `this` 指向。在定义 `methods` 时应避免使用箭头函数，因为这会阻止 Vue 绑定恰当的 `this` 指向。
-
-
-
-## 事件处理
-
-### 多事件处理
-
-```vue
-<!-- 这两个 one() 和 two() 将执行按钮点击事件 -->
-<button @click="one($event), two($event)">
-  Submit
-</button>
-```
-
-```vue
-// ...
-methods: {
-  one(event) {
-    // 第一个事件处理器逻辑...
-  },
-  two(event) {
-   // 第二个事件处理器逻辑...
-  }
-}
-```
-
-### 事件修饰符
-
-```vue
-<!-- 阻止单击事件继续冒泡 -->
-<a @click.stop="doThis"></a>
-
-<!-- 提交事件不再重载页面 -->
-<form @submit.prevent="onSubmit"></form>
-
-<!-- 修饰符可以串联 -->
-<a @click.stop.prevent="doThat"></a>
-
-<!-- 只有修饰符 -->
-<form @submit.prevent></form>
-
-<!-- 添加事件监听器时使用事件捕获模式 -->
-<!-- 即内部元素触发的事件先在此处理，然后才交由内部元素进行处理 -->
-<div @click.capture="doThis">...</div>
-
-<!-- 只当在 event.target 是当前元素自身时触发处理函数 -->
-<!-- 即事件不是从内部元素触发的 -->
-<div @click.self="doThat">...</div>
-```
-
-> 使用修饰符时，顺序很重要；相应的代码会以同样的顺序产生。因此，用 `v-on:click.prevent.self` 会阻止所有的点击，
->
-> 而 `v-on:click.self.prevent` 只会阻止对元素自身的点击。
-
-```vue
-<!-- 点击事件将只会触发一次 -->
-<a @click.once="doThis"></a>
-```
 
 
 
@@ -481,6 +421,720 @@ export default defineComponent({
 
 
 #### reactive
+
+
+
+
+
+
+
+
+
+# 阅读官方文档
+
+
+
+## 基础
+
+### property
+
+#### methods
+
+Vue 自动为 `methods` 绑定 `this`，以便于它始终指向组件实例。这将确保方法在用作事件监听或回调时保持正确的 `this` 指向。在定义 `methods` 时应避免使用箭头函数，因为这会阻止 Vue 绑定恰当的 `this` 指向。
+
+
+
+### 事件处理
+
+#### 多事件处理
+
+```vue
+<!-- 这两个 one() 和 two() 将执行按钮点击事件 -->
+<button @click="one($event), two($event)">
+  Submit
+</button>
+```
+
+```vue
+// ...
+methods: {
+  one(event) {
+    // 第一个事件处理器逻辑...
+  },
+  two(event) {
+   // 第二个事件处理器逻辑...
+  }
+}
+```
+
+#### 事件修饰符
+
+```vue
+<!-- 阻止单击事件继续冒泡 -->
+<a @click.stop="doThis"></a>
+
+<!-- 提交事件不再重载页面 -->
+<form @submit.prevent="onSubmit"></form>
+
+<!-- 修饰符可以串联 -->
+<a @click.stop.prevent="doThat"></a>
+
+<!-- 只有修饰符 -->
+<form @submit.prevent></form>
+
+<!-- 添加事件监听器时使用事件捕获模式 -->
+<!-- 即内部元素触发的事件先在此处理，然后才交由内部元素进行处理 -->
+<div @click.capture="doThis">...</div>
+
+<!-- 只当在 event.target 是当前元素自身时触发处理函数 -->
+<!-- 即事件不是从内部元素触发的 -->
+<div @click.self="doThat">...</div>
+```
+
+> 使用修饰符时，顺序很重要；相应的代码会以同样的顺序产生。因此，用 `v-on:click.prevent.self` 会阻止所有的点击，
+>
+> 而 `v-on:click.self.prevent` 只会阻止对元素自身的点击。
+
+```vue
+<!-- 点击事件将只会触发一次 -->
+<a @click.once="doThis"></a>
+```
+
+
+
+#### 按键修饰符
+
+
+
+Vue 为最常用的键提供了别名：
+
+- `.enter`
+- `.tab`
+- `.delete` (捕获“删除”和“退格”键)
+- `.esc`
+- `.space`
+- `.up`
+- `.down`
+- `.left`
+- `.right`
+
+#### 系统修饰键
+
+可以用如下修饰符来实现仅在按下相应按键时才触发鼠标或键盘事件的监听器。
+
+- `.ctrl`
+- `.alt`
+- `.shift`
+- `.meta`   在 Mac 系统键盘上，meta 对应 command 键 (⌘)。在 Windows 系统键盘 meta 对应 Windows 徽标键 (⊞)
+
+```vue
+<!-- Alt + Enter -->
+<input @keyup.alt.enter="clear" />
+
+<!-- Ctrl + Click -->
+<div @click.ctrl="doSomething">Do something</div>
+```
+
+
+
+##### .exact
+
+```vue
+<!-- 即使 Alt 或 Shift 被一同按下时也会触发 -->
+<button @click.ctrl="onClick">A</button>
+
+<!-- 有且只有 Ctrl 被按下的时候才触发 -->
+<button @click.ctrl.exact="onCtrlClick">A</button>
+
+<!-- 没有任何系统修饰符被按下的时候才触发 -->
+<button @click.exact="onClick">A</button>
+```
+
+
+
+##### 鼠标按钮修饰符
+
+- `.left`
+- `.right`
+- `.middle`
+
+这些修饰符会限制处理函数仅响应特定的鼠标按钮。
+
+### 表单输入绑定
+
+你可以用 v-model 指令在表单 `<input>`、`<textarea>` 及 `<select>` 元素上创建双向数据绑定。它会根据控件类型自动选取正确的方法来更新元素。尽管有些神奇，但 `v-model` 本质上不过是`语法糖`。它负责监听用户的输入事件来更新数据，并在某种极端场景下进行一些特殊处理。
+
+> `v-model` 会忽略所有表单元素的 `value`、`checked`、`selected` attribute 的初始值。
+>
+> 它将始终将当前活动实例的数据作为数据来源。你应该通过 JavaScript 在组件的 `data` 选项中声明初始值。
+
+
+
+
+
+### 组件基础
+
+#### 全局组件
+
+```js
+// 创建一个Vue 应用
+const app = Vue.createApp({})
+
+// 定义一个名为 button-counter 的新全局组件
+app.component('button-counter', {
+  data() {
+    return {
+      count: 0
+    }
+  },
+  template: `
+    <button @click="count++">
+      You clicked me {{ count }} times.
+    </button>`
+})
+```
+
+#### 局部组件
+
+```js
+const ComponentA = {
+  /* ... */
+}
+const ComponentB = {
+  /* ... */
+}
+
+const app = Vue.createApp({
+  components: {
+    'component-a': ComponentA,
+    'component-b': ComponentB
+  }
+})
+```
+
+#### prop
+
+##### 传静态值
+
+```vue
+    <div id="blog-post-demo">
+      <blog-post title="My journey with Vue"></blog-post>
+      <blog-post title="Blogging with Vue"></blog-post>
+      <blog-post title="Why Vue is so fun"></blog-post>
+    </div>
+    <script>
+      const app = Vue.createApp({})
+
+      app.component('blog-post', {
+        props: ['title'],
+        template: `<h4>{{ title }}</h4>`,
+      })
+
+      app.mount('#blog-post-demo')
+    </script>
+```
+
+
+
+#### 监听子组件事件
+
+父级组件可以像处理原生 DOM 事件一样通过 `v-on` 或 `@` 监听子组件实例的任意事件：
+
+```vue
+<blog-post ... @enlarge-text="postFontSize += 0.1"></blog-post>
+```
+
+子组件： 将$emit(要触发的事件名) 这个触发事件的操作  绑定在子组件的一个事件中
+
+```vue
+<button @click="$emit('enlargeText')">
+  Enlarge text
+</button>
+```
+
+##### 示例：
+
+```vue
+    <div id="blog-post-demo">
+      <div :style="{ fontSize: postFontSize + 'px' }">
+        <blog-post
+          title="My journey with Vue"
+          @enlarge-text="print(),postFontSize+=1"
+        ></blog-post>
+      </div>
+    </div>
+    <script>
+      const app = Vue.createApp({
+        data() {
+          return {
+            postFontSize: 20,
+          }
+        },
+        methods: {
+          print() {
+            console.log('click')
+          },
+        },
+      })
+      app.component('blog-post', {
+        props: ['title'],
+        template: `
+          <div class="blog-post">
+            <h4>{{ title }}</h4>
+            <button @click="$emit('enlargeText')">
+              Enlarge text
+            </button>
+          </div>
+        `,
+      })
+
+      app.mount('#blog-post-demo')
+    </script>
+```
+
+
+
+##### 子组件用事件抛出一个值
+
+有的时候用一个事件来抛出一个特定的值是非常有用的。例如我们可能想让 `<blog-post>` 组件决定它的文本要放大多少。这时可以使用 `$emit` 的第二个参数来提供这个值
+
+```vue
+<button @click="$emit('enlargeText', 0.1)">
+  Enlarge text
+</button>
+```
+
+然后当在父级组件监听这个事件的时候，我们可以通过 `$event` 访问到被抛出的这个值：
+
+```html
+<blog-post ... @enlarge-text="postFontSize += $event"></blog-post>
+```
+
+或者，如果这个事件处理函数是一个方法：
+
+```html
+<blog-post ... @enlarge-text="onEnlargeText"></blog-post>
+```
+
+那么这个值将会作为第一个参数传入这个方法：
+
+```js
+methods: {
+  onEnlargeText(enlargeAmount) {
+    this.postFontSize += enlargeAmount
+  }
+}
+```
+
+**tips**
+
+`@enlarge-text="onEnlargeText"`   只有单个事件的时候可以这样简写
+
+
+
+##### 在组件上使用 v-model
+
+自定义事件也可以用于创建支持 `v-model` 的自定义输入组件。记住：
+
+```html
+<input v-model="searchText" />
+```
+
+等价于：
+
+```html
+<input :value="searchText" @input="searchText = $event.target.value" />
+```
+
+示例
+
+```html
+    <div id="app">
+      <!-- <input v-model="searchText" /> -->
+      <input :value="searchText" @input="func" />
+        <!-- @input  表单内容变化时调用 -->
+      {{searchText}}
+    </div>
+
+    <script>
+      const app = Vue.createApp({
+        data() {
+          return {
+            searchText: '',
+            text: 123,
+          }
+        },
+        methods: {
+          func() {
+            console.log(event);
+            this.searchText = event.target.value
+          },
+        },
+      }).mount('#app')
+    </script>
+```
+
+
+
+当用在组件上时，`v-model` 则会这样：
+
+示例
+
+```html
+    <div id="app">
+      <custom-input
+        :model-value="searchText"
+        @update:model-value="searchText = $event"
+      ></custom-input>
+
+      {{searchText}}
+    </div>
+
+    <script>
+      const app = Vue.createApp({
+        data() {
+          return {
+            searchText: '',
+          }
+        },
+      })
+      app.component('custom-input', {
+        props: ['modelValue'],
+        emits: ['update:modelValue'],
+        template: `
+          <input
+            :value = "modelValue"
+            @input ="$emit('update:modelValue',$event.target.value)"
+          />
+        `,
+      })
+      app.mount('#app')
+    </script>
+```
+
+
+
+在该组件中实现 `v-model` 的另一种方法是使用 `computed` property 的功能来定义 getter 和 setter。`get` 方法应返回 `modelValue` property，`set` 方法应该触发相应的事件。
+
+```html
+    <div id="app">
+      <diy-input
+        :model-value="searchText"
+        @update:model-value="searchText = $event"
+      ></diy-input>
+      {{searchText}}
+    </div>
+    <script>
+      const app = Vue.createApp({
+        data() {
+          return {
+            searchText: '123132',
+          }
+        },
+      })
+      // 用computed实现
+      app.component('diy-input', {
+        props: ['modelValue'],
+        emits: ['update:modelValue'],
+        template: `
+          <input v-model="value">
+        `,
+        computed: {
+          value: {
+            get() {
+              return this.modelValue
+            },
+            set(value) {
+              this.$emit('update:modelValue', value)
+            },
+          },
+        },
+      })
+      app.mount('#app')
+    </script>
+```
+
+
+
+#### 插槽slot
+
+这可以通过使用 Vue 的自定义 `<slot>` 元素来实现：
+
+```js
+    <div id="app">
+      <comp> this is myself </comp>
+    </div>
+    <script>
+      const app = Vue.createApp({})
+      app.component('comp', {
+        template: `
+          <slot></slot>
+          <div>self</div>
+        `,
+      })
+      app.mount('#app')
+    </script>
+```
+
+如你所见，我们使用 `<slot>` 作为我们想要插入内容的占位符——就这么简单！
+
+
+
+
+
+#### 动态组件
+
+通过 Vue 的 `<component>` 元素加一个特殊的 `is` attribute 来实现：
+
+```html
+<!-- 组件会在 `currentTabComponent` 改变时改变 -->
+<component :is="currentTabComponent"></component>
+```
+
+##### 示例：
+
+```html
+    <div id="app">
+      <div v-for="(item,index) in compList" :key="index" @click="comp = item">{{item}}</div>
+      <component :is="theComp"></component>
+    </div>
+    <script>
+      const app = Vue.createApp({
+        data() {
+          return {
+            comp: 'comp-1',
+            compList: ['comp-1', 'comp-2', 'comp-3'],
+          }
+        },
+        computed: {
+          theComp() {
+            return this.comp
+          },
+        },
+      })
+      app.component('comp-1', {
+        template: `<div>this is first</div>`,
+      })
+      app.component('comp-2', {
+        template: `<div>this is second</div>`,
+      })
+      app.component('comp-3', {
+        template: `<div>this is third</div>`,
+      })
+      app.mount('#app')
+    </script>
+```
+
+
+
+#### 元素位置受限
+
+有些 HTML 元素，诸如 `<ul>`、`<ol>`、`<table>` 和 `<select>`，对于哪些元素可以出现在其内部是有严格限制的。而有些元素，诸如 `<li>`、`<tr>` 和 `<option>`，只能出现在其它某些特定的元素内部。
+
+这会导致我们使用这些有约束条件的元素时遇到一些问题。例如：
+
+```html
+    <div id="app">
+      <table 
+        style="width: 100px; 
+               height: 100px; 
+               background-color: skyblue">
+        <comp></comp>
+      </table>
+    </div>
+    <script>
+      const app = Vue.createApp({})
+      app.component('comp', {
+        template: `
+      <div>123123</div>
+      <div>123123</div>`,
+      })
+      app.mount('#app')
+    </script>
+```
+
+![image-20220113172914218](assets/image-20220113172914218.png)
+
+这个自定义组件 `<comp>` 会被作为无效的内容提升到外部，并导致最终渲染结果出错。我们可以使用特殊的 [`is` attribute](https://v3.cn.vuejs.org/api/special-attributes.html#is) 作为一个变通的办法：
+
+`is="vue:组件名"`
+
+```html
+<table>
+  <tr is="vue:blog-post-row"></tr>
+</table>
+```
+
+> TIP
+>
+> 当它用于原生 HTML 元素时，`is` 的值必须以 `vue:` 开头，才可以被解释为 Vue 组件。这是避免和原生[自定义元素](https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-customized-builtin-example)混淆。
+
+##### 示例
+
+```html
+    <div id="app">
+      <table 
+        style="width: 100px; 
+               height: 100px; 
+               background-color: skyblue;
+               opacity: 0.5;">
+        <!-- <comp></comp> -->
+        <tr is="vue:comp"></tr>
+      </table>
+    </div>
+    <script>
+      const app = Vue.createApp({})
+      app.component('comp', {
+        template: `
+      <div>123123</div>
+      <div>123123</div>`,
+      })
+      app.mount('#app')
+    </script>
+```
+
+![image-20220113173426652](assets/image-20220113173426652.png)
+
+#### 大小写不敏感
+
+另外，HTML attribute 名不区分大小写，因此浏览器将所有大写字符解释为小写。这意味着当你在 DOM 模板中使用时，驼峰 prop 名称和 event 处理器参数需要使用它们的 kebab-cased (横线字符分隔) 等效值：
+
+```js
+//  在 JavaScript 中是驼峰式
+
+app.component('blog-post', {
+  props: ['postTitle'],
+  template: `
+    <h3>{{ postTitle }}</h3>
+  `
+})
+```
+
+```html
+<!-- 在 HTML 中则是横线字符分割 -->
+
+<blog-post post-title="hello!"></blog-post>
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
