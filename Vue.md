@@ -1022,85 +1022,307 @@ app.component('blog-post', {
 
 
 
+## 深入组件
 
 
 
+### 组件注册
 
+#### 全局注册
 
+```js
+Vue.createApp({...}).component('my-component-name', {
+  // ... 选项 ...
+})
+```
 
+#### 局部注册
 
+```js
+const ComponentA = {
+  /* ... */
+}
 
+const app = Vue.createApp({
+  components: {
+    'component-a': ComponentA,
+  }
+})
+```
 
 
 
+如果你通过 Babel 和 webpack 使用 ES2015 模块，那么代码看起来像这样：
 
+```js
+import ComponentA from './ComponentA.vue'
 
+export default {
+  components: {
+    ComponentA
+  }
+  // ...
+}
+```
 
+注意在 ES2015+ 中，在对象中放一个类似 `ComponentA` 的变量名其实是 `ComponentA: ComponentA` 的缩写，即这个变量名同时是：
 
+- 用在模板中的自定义元素的名称
+- 包含了这个组件选项的变量名
 
 
 
 
 
+### Props
 
+#### 类型限制
 
+你可以以对象形式列出 prop，这些 property 的名称和值分别是 prop 各自的名称和类型：
 
+```js
+props: {
+  title: String,
+  likes: Number,
+  isPublished: Boolean,
+  commentIds: Array,
+  author: Object,
+  callback: Function,
+  contactsPromise: Promise // 或任何其他构造函数
+}
+```
 
+#### 传递静态或动态的 Prop
 
+目前为止，你已经知道了可以像这样给 prop 传入一个静态的值：
 
+```html
+<blog-post title="My journey with Vue"></blog-post>
+```
 
 
 
+你也知道 prop 可以通过 `v-bind` 或简写 `:` 动态赋值，例如：
 
+```html
+<!-- 动态赋予一个变量的值 -->
+<blog-post :title="post.title"></blog-post>
 
+<!-- 动态赋予一个复杂表达式的值 -->
+<blog-post :title="post.title + ' by ' + post.author.name"></blog-post>
+```
 
+在上述两个示例中，我们传入的值都是字符串类型的，但实际上*任何*类型的值都可以传给一个 prop。
 
+##### 传入数字
 
+```html
+<!-- 这是一个 JavaScript 表达式而不是一个字符串。             -->
+<blog-post :likes="42"></blog-post>
+```
 
+##### 传入布尔值
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+```html
+<!-- 即便 `false` 是静态的，我们仍需通过 `v-bind` 来告诉 Vue  -->
+<!-- 这是一个 JavaScript 表达式而不是一个字符串。             -->
+<blog-post :is-published="false"></blog-post>
+```
+
+
+
+#### 单向数据流
+
+所有的 prop 都使得其父子 prop 之间形成了一个**单向下行绑定**：父级 prop 的更新会向下流动到子组件中，但是反过来则不行。这样会防止从子组件意外变更父级组件的状态，从而导致你的应用的数据流向难以理解。
+
+另外，每次父级组件发生变更时，子组件中所有的 prop 都将会刷新为最新的值。这意味着你**不**应该在一个子组件内部改变 prop。如果你这样做了，Vue 会在浏览器的控制台中发出警告。
+
+这里有两种常见的试图变更一个 prop 的情形：
+
+1. **这个 prop 用来传递一个初始值；这个子组件接下来希望将其作为一个本地的 prop 数据来使用**。在这种情况下，最好定义一个本地的 data property 并将这个 prop 作为其初始值：
+
+```js
+props: ['initialCounter'],
+data() {
+  return {
+    counter: this.initialCounter
+  }
+}
+```
+
+2. **这个 prop 以一种原始的值传入且需要进行转换**。在这种情况下，最好使用这个 prop 的值来定义一个计算属性：
+
+```js
+props: ['size'],
+computed: {
+  normalizedSize() {
+    return this.size.trim().toLowerCase()
+  }
+}
+```
+
+
+
+> 警告
+>
+> 注意在 JavaScript 中对象和数组是通过引用传入的，所以对于一个数组或对象类型的 prop 来说，在子组件中改变这个对象或数组本身**将会**影响到父组件的状态，且 Vue 无法为此向你发出警告。作为一个通用规则，应该避免修改任何 prop，包括对象和数组，因为这种做法无视了单向数据绑定，且可能会导致意料之外的结果。
+
+
+
+#### Prop验证
+
+```js
+app.component('my-component', {
+  props: {
+    // 基础的类型检查 (`null` 和 `undefined` 值会通过任何类型验证)
+    propA: Number,
+    // 多个可能的类型
+    propB: [String, Number],
+    // 必填的字符串
+    propC: {
+      type: String,
+      required: true
+    },
+    // 带有默认值的数字
+    propD: {
+      type: Number,
+      default: 100
+    },
+    // 带有默认值的对象
+    propE: {
+      type: Object,
+      // 对象或数组的默认值必须从一个工厂函数返回
+      default() {
+        return { message: 'hello' }
+      }
+    },
+    // 自定义验证函数
+    propF: {
+      validator(value) {
+        // 这个值必须与下列字符串中的其中一个相匹配
+        return ['success', 'warning', 'danger'].includes(value)
+      }
+    },
+    // 具有默认值的函数
+    propG: {
+      type: Function,
+      // 与对象或数组的默认值不同，这不是一个工厂函数——这是一个用作默认值的函数
+      default() {
+        return 'Default function'
+      }
+    }
+  }
+})
+```
+
+> **Tips**
+>
+> 注意 prop 会在一个组件实例创建**之前**进行验证，所以实例的 property (如 `data`、`computed` 等) 在 `default` 或 `validator` 函数中是不可用的。
+
+
+
+##### 类型检查
+
+###### 使用自定义类型
+
+此外，`type` 还可以是一个自定义的构造函数，并且通过 `instanceof` 来进行检查确认。例如，给定下列现成的构造函数：
+
+```js
+function Person(firstName, lastName) {
+  this.firstName = firstName
+  this.lastName = lastName
+}
+```
+
+你可以使用：
+
+```js
+app.component('blog-post', {
+  props: {
+    author: Person
+  }
+})
+```
+
+来验证 `author` prop 的值是否是通过 `new Person` 创建的
+
+### 非prop的Attribute
+
+一个非 prop 的 attribute 是指传向一个组件，但是该组件并没有相应 [props](https://v3.cn.vuejs.org/guide/component-props.html) 或 [emits](https://v3.cn.vuejs.org/guide/component-custom-events.html#定义自定义事件) 定义的 attribute。
+
+常见的示例包括 `class`、`style` 和 `id` attribute。可以通过 `$attrs` property 访问那些 attribute。
+
+#### $attrs
+
+```html
+// 父组件
+ <son id="911"></son>
+```
+
+```js
+// 子组件
+  created() {
+    console.log(this.$attrs.id)
+  },
+```
+
+> 父子组件 生命周期顺序为
+>
+> beforeCreate(父) -> created(父) -> beforeMount(父) -> beforeCreate(子) -> created(子) -> beforeMount(子) -> mounted(子) -> mounted(父)
+
+#### Attribute继承
+
+当组件返回单个根节点时，非 prop 的 attribute 将自动添加到根节点的 attribute 中。
+
+##### 示例
+
+```html
+// 子组件中
+<template>
+  <div class="a">
+    <div class="b">
+      <div class="c">ddddd</div>
+    </div>
+  </div>
+</template>
+```
+
+如果我们需要通过 `data-status` attribute 定义 `<date-picker>` 组件的状态，它将应用于根节点 (即 `div.date-picker`)。
+
+```html
+<!-- 具有非 prop 的 attribute 的 son 组件-->
+<son id="911"></son>
+
+<!-- 渲染后的 date-picker 组件 -->
+ <div class="a" id="911">
+    <div class="b">
+      <div class="c">ddddd</div>
+    </div>
+ </div>
+```
+
+
+
+##### 应用在 Select标签  示例
+
+```htmL
+<son @change="showSelected"></son>
+```
+
+```js
+methods: {
+    showSelected(event) {
+      alert('you select ' + event.target)
+      console.log(event)
+      console.log(event.target)
+      console.log(event.target.selectedIndex)
+      console.log(event.target.options)
+      console.log(event.target.options[event.target.selectedIndex].innerText)
+    },
+  },
+```
+
+![image-20220114174005999](assets/image-20220114174005999.png)
 
 
 
