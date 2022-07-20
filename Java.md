@@ -1,10 +1,12 @@
-## 原文链接
+## 00-原文链接
 
 **[Tobebetterjavaer](https://tobebetterjavaer.com/home.html)** 
 
+**[JavaGuide](https://javaguide.cn)**
 
+**[Java教程 - 廖雪峰](https://www.liaoxuefeng.com/wiki/1252599548343744)**
 
-## 字符串
+## 01-字符串
 
 ### 源码
 
@@ -331,7 +333,7 @@ public boolean contentEquals(CharSequence cs) {
 
 
 
-## 集合
+## 02-集合
 
 
 
@@ -711,7 +713,7 @@ static final int hash(Object key) {
 
   
 
-## IO
+## 03-IO
 
 ### 基础
 
@@ -921,7 +923,514 @@ CPU 很快，它比内存快 100 倍，比磁盘快百万倍。那也就意味�
 
 
 
-## 123123
+## 04-并发编程
+
+### 多线程
+
+现代操作系统（Windows，macOS，Linux）都可以执行多任务。多任务就是同时运行多个任务，例如：
+
+CPU执行代码都是一条一条顺序执行的，但是，即使是单核cpu，也可以同时运行多个任务。因为操作系统执行多任务实际上就是让CPU对多个任务轮流交替执行。
+
+例如，假设我们有语文、数学、英语3门作业要做，每个作业需要30分钟。我们把这3门作业看成是3个任务，可以做1分钟语文作业，再做1分钟数学作业，再做1分钟英语作业：
+
+> **即使是多核CPU，因为通常任务的数量远远多于CPU的核数，所以任务也是交替执行的。**
+
+
+
+Java语言内置了多线程支持：一个Java程序实际上是一个JVM进程，JVM进程用一个主线程来执行`main()`方法，在`main()`方法内部，我们又可以启动多个线程。此外，JVM还有负责垃圾回收的其他工作线程等。
+
+因此，对于大多数Java程序来说，我们说多任务，实际上是说如何使用多线程实现多任务。
+
+和单线程相比，多线程编程的特点在于：多线程经常需要读写共享数据，并且需要同步。例如，播放电影时，就必须由一个线程播放视频，另一个线程播放音频，两个线程需要协调运行，否则画面和声音就不同步。因此，多线程编程的复杂度高，调试更困难。
+
+Java多线程编程的特点又在于：
+
+- 多线程模型是Java程序最基本的并发模型；
+- 后续读写网络、数据库、Web开发等都依赖Java多线程模型。
+
+
+
+
+
+#### 进程
+
+在计算机中，我们把一个任务称为一个进程，浏览器就是一个进程，视频播放器是另一个进程，类似的，音乐播放器和Word都是进程。
+
+某些进程内部还需要同时执行多个子任务。例如，我们在使用Word时，Word可以让我们一边打字，一边进行拼写检查，同时还可以在后台进行打印，我们把子任务称为线程。
+
+进程和线程的关系就是：一个进程可以包含一个或多个线程，但至少会有一个线程。
+
+> **常用的Windows、Linux等操作系统都采用`抢占式`多任务，如何调度线程完全由操作系统决定，程序自己不能决定什么时候执行，以及执行多长时间。**
+
+##### 进程 VS 线程
+
+进程和线程是包含关系，但是多任务既可以由多进程实现，也可以由单进程内的多线程实现，还可以混合多进程＋多线程。
+
+具体采用哪种方式，要考虑到进程和线程的特点。
+
+和多线程相比，多进程的缺点在于：
+
+- 创建进程比创建线程开销大，尤其是在Windows系统上；
+- 进程间通信比线程间通信要慢，因为线程间通信就是读写同一个变量，速度很快。
+
+而多进程的优点在于：
+
+多进程稳定性比多线程高，因为在多进程的情况下，一个进程崩溃不会影响其他进程，而在多线程的情况下，任何一个线程崩溃会直接导致整个进程崩溃。
+
+
+
+#### 线程
+
+
+
+Java语言内置了多线程支持。当Java程序启动的时候，实际上是启动了一个JVM进程，然后，JVM启动主线程来执行`main()`方法。在`main()`方法中，我们又可以启动其他线程。
+
+
+
+##### 创建线程
+
+创建一个新线程非常容易，我们需要实例化一个`Thread`实例，然后调用它的`start()`方法
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Thread t = new Thread();
+        t.start(); // 启动新线程
+    }
+}
+```
+
+但是这个线程启动后实际上什么也不做就立刻结束了。我们希望新线程能执行指定的代码，有以下几种方法：
+
+- 方法一：从`Thread`派生一个自定义类，然后覆写`run()`方法：
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Thread t = new MyThread();
+        t.start(); // 启动新线程
+    }
+}
+
+class MyThread extends Thread {
+    @Override
+    public void run() {
+        System.out.println("start new thread!");
+    }
+}
+```
+
+> 注意 : `start()`方法会在内部自动调用实例的`run()`方法。
+
+方法二：创建`Thread`实例时，传入一个`Runnable`实例：
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Thread t = new Thread(new MyRunnable());
+        t.start(); // 启动新线程
+    }
+}
+
+class MyRunnable implements Runnable {
+    @Override
+    public void run() {
+        System.out.println("start new thread!");
+    }
+}
+```
+
+或者用Java8引入的lambda语法进一步简写为：(也可以实现相同的效果)
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Thread t = new Thread(() -> {
+            System.out.println("start new thread!");
+        });
+        t.start(); // 启动新线程
+    }
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+♠②：实现 Callable 接口；
+
+```java
+public class MyCallable implements Callable<Integer> {
+   public Integer call() {
+      return 123;
+   }
+}
+```
+
+
+
+**实现接口 VS 继承 Thread**
+实现接口会更好一些，因为：
+
+- Java 不支持多重继承，因此继承了 Thread 类就无法继承其它类，但是可以实现多个接口
+- 类可能只要求可执行就行，继承整个 Thread 类开销过大
+
+##### 线程控制
+
+1）`sleep()`：使当前正在执行的线程暂停指定的毫秒数，也就是进入休眠的状态。
+
+需要注意的是，sleep 的时候要对异常进行处理。
+
+```java
+try {//sleep会发生异常要显示处理
+    Thread.sleep(20);//暂停20毫秒
+} catch (InterruptedException e) {
+    e.printStackTrace();
+}
+```
+
+2）`join()`：等待这个线程执行完才会轮到后续线程得到cpu的执行权，使用这个也要抛出异常。
+
+```java
+//创建MyRunnable类
+MyRunnable mr = new MyRunnable();
+//创建Thread类的有参构造,并设置线程名
+Thread t1 = new Thread(mr, "张飞");
+Thread t2 = new Thread(mr, "貂蝉");
+Thread t3 = new Thread(mr, "吕布");
+//启动线程
+t1.start();
+try {
+    t1.join(); //等待t1执行完才会轮到t2，t3抢
+} catch (InterruptedException e) {
+    e.printStackTrace();
+}
+t2.start();
+t3.start();
+```
+
+3）`setDaemon()`：将此线程标记为守护线程，准确来说，就是服务其他的线程，像 Java 中的垃圾回收线程，就是典型的守护线程。
+
+```java
+//创建MyRunnable类
+MyRunnable mr = new MyRunnable();
+//创建Thread类的有参构造,并设置线程名
+Thread t1 = new Thread(mr, "张飞");
+Thread t2 = new Thread(mr, "貂蝉");
+Thread t3 = new Thread(mr, "吕布");
+
+t1.setDaemon(true);
+t2.setDaemon(true);
+
+//启动线程
+t1.start();
+t2.start();
+t3.start();
+```
+
+如果其他线程都执行完毕，main 方法（主线程）也执行完毕，JVM 就会退出，也就是停止运行。如果 JVM 都停止运行了，守护线程自然也就停止了。
+
+4) `Executor`:  管理多个异步任务的执⾏，⽽⽆需程序员显式地管理线程的⽣命周期。这⾥的异步是指多个任 务的执⾏互不⼲扰，不需要进⾏同步操作。
+
+主要有三种 Executor： 
+
+- CachedThreadPool：⼀个任务创建⼀个线程； 
+
+- FixedThreadPool：所有任务只能使⽤固定⼤⼩的线程； 
+
+- SingleThreadExecutor：相当于⼤⼩为 1 的 FixedThreadPool。
+
+
+
+##### 线程状态
+
+操作系统线程主要有以下三个状态：
+
+- 就绪状态(**ready**)：线程正在等待使用CPU，经调度程序调用之后可进入running状态。
+- 执行状态(**running**)：线程正在使用CPU。
+- 等待状态(**waiting**): 线程经过等待事件的调用或者正在等待其他资源（如I/O）
+
+
+
+**线程状态转换图：**
+
+> 在现在的操作系统中，线程是被视为轻量级进程的，所以**操作系统线程的状态其实和操作系统进程的状态是一致的**。
+
+![系统进程/线程转换图](Java.assets/thread-state-and-method-f60caaad-ad47-4edc-8d0a-ab736c2e8500.png)
+
+**Java线程的6个状态**
+
+```java
+// Thread.State 源码
+public enum State {
+    NEW,
+    RUNNABLE,
+    BLOCKED,
+    WAITING,
+    TIMED_WAITING,
+    TERMINATED;
+}
+```
+
+
+
+`NEW`
+
+处于NEW状态的线程此时尚未启动。这里的尚未启动指的是还没调用Thread实例的start()方法。
+
+```java
+private void testStateNew() {
+    Thread thread = new Thread(() -> {});
+    System.out.println(thread.getState()); // 输出 NEW 
+}
+```
+
+从上面可以看出，只是创建了线程而并没有调用start()方法，此时线程处于NEW状态
+
+ `RUNNABLE`
+
+表示当前线程正在运行中。处于RUNNABLE状态的线程在Java虚拟机中运行，也有可能在等待CPU分配资源。
+
+看了操作系统线程的几个状态之后我们来看看Thread源码里对RUNNABLE状态的定义：
+
+```text
+/**
+ * Thread state for a runnable thread.  A thread in the runnable
+ * state is executing in the Java virtual machine but it may
+ * be waiting for other resources from the operating system
+ * such as processor.
+ */
+```
+
+> Java线程的**RUNNABLE**状态其实是包括了传统操作系统线程的**ready**和**running**两个状态的。
+
+`BLOCKED`
+
+阻塞状态。处于BLOCKED状态的线程正等待锁的释放以进入同步区。
+
+`WAITING`
+
+等待状态。处于等待状态的线程变成RUNNABLE状态需要其他线程唤醒。
+
+调用如下3个方法会使线程进入等待状态：
+
+- Object.wait()：使当前线程处于等待状态直到另一个线程唤醒它；
+- Thread.join()：等待线程执行完毕，底层调用的是Object实例的wait方法；
+- LockSupport.park()：除非获得调用许可，否则禁用当前线程进行线程调度。
+
+
+
+`TIMED_WAITING`
+
+超时等待状态。线程等待一个具体的时间，时间到后会被自动唤醒。
+
+调用如下方法会使线程进入超时等待状态：
+
+- Thread.sleep(long millis)：使当前线程睡眠指定时间；
+- Object.wait(long timeout)：线程休眠指定时间，等待期间可以通过notify()/notifyAll()唤醒；
+- Thread.join(long millis)：等待当前线程最多执行millis毫秒，如果millis为0，则会一直执行；
+- LockSupport.parkNanos(long nanos)： 除非获得调用许可，否则禁用当前线程进行线程调度指定时间；
+- LockSupport.parkUntil(long deadline)：同上，也是禁止线程进行调度指定时间；
+
+`TERMINATED`
+
+终止状态。此时线程已执行完毕
+
+
+
+![线程状态转换图](Java.assets/thread-state-and-method-18f0d338-1c19-4e18-a0cc-62e97fc39272.png)
+
+
+
+
+
+#### 线程组
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# -----黑马教程笔记-------
 
 ### String与integer
 
