@@ -843,6 +843,70 @@ fileWriter.close();
 
 
 
+**2）数组**
+
+通常来说，针对文件的读写操作，使用文件流配合缓冲流就够用了，但为了提升效率，频繁地读写文件并不是太好，那么就出现了数组流，有时候也称为内存流。
+
+ByteArrayInputStream 的例子：
+
+
+
+```java
+InputStream is =new BufferedInputStream(
+        new ByteArrayInputStream(
+                "沉默王二".getBytes(StandardCharsets.UTF_8)));
+//操作
+byte[] flush =new byte[1024];
+int len =0;
+while(-1!=(len=is.read(flush))){
+    System.out.println(new String(flush,0,len));
+}
+//释放资源
+is.close();
+```
+
+ByteArrayOutputStream 的例子：
+
+```java
+ByteArrayOutputStream bos =new ByteArrayOutputStream();
+byte[] info ="沉默王二".getBytes();
+bos.write(info, 0, info.length);
+//获取数据
+byte[] dest =bos.toByteArray();
+//释放资源
+bos.close();
+```
+
+**3）管道**
+
+
+
+**4）基本数据类型**
+
+
+
+**5）缓冲**
+
+CPU 很快，它比内存快 100 倍，比磁盘快百万倍。那也就意味着，程序和内存交互会很快，和硬盘交互相对就很慢，这样就会导致性能问题。
+
+为了减少程序和硬盘的交互，提升程序的效率，就引入了缓冲流，也就是类名前缀带有 Buffer 的那些，比如说 BufferedInputStream、BufferedOutputStream、BufferedReader、BufferedWriter。
+
+![img](Java.assets/shangtou-04.png)
+
+缓冲流在内存中设置了一个缓冲区，只有缓冲区存储了足够多的带操作的数据后，才会和内存或者硬盘进行交互。简单来说，就是一次多读/写点，少读/写几次，这样程序的性能就会提高。
+
+**6）打印**
+
+
+
+**7）对象序列化/反序列化**
+
+
+
+**8）转换**
+
+
+
 ### BIO | NIO | AIO
 
 **BIO （Blocking I/O）：同步阻塞 I/O 模式。**
