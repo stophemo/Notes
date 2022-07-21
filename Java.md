@@ -8,6 +8,8 @@
 
 ## 01-字符串
 
+
+
 ### 源码
 
 ```java
@@ -962,23 +964,6 @@ Java多线程编程的特点又在于：
 
 > **常用的Windows、Linux等操作系统都采用`抢占式`多任务，如何调度线程完全由操作系统决定，程序自己不能决定什么时候执行，以及执行多长时间。**
 
-##### 进程 VS 线程
-
-进程和线程是包含关系，但是多任务既可以由多进程实现，也可以由单进程内的多线程实现，还可以混合多进程＋多线程。
-
-具体采用哪种方式，要考虑到进程和线程的特点。
-
-和多线程相比，多进程的缺点在于：
-
-- 创建进程比创建线程开销大，尤其是在Windows系统上；
-- 进程间通信比线程间通信要慢，因为线程间通信就是读写同一个变量，速度很快。
-
-而多进程的优点在于：
-
-多进程稳定性比多线程高，因为在多进程的情况下，一个进程崩溃不会影响其他进程，而在多线程的情况下，任何一个线程崩溃会直接导致整个进程崩溃。
-
-
-
 #### 线程
 
 
@@ -1252,135 +1237,386 @@ private void testStateNew() {
 
 
 
-#### 线程组
+##### 线程组
+
+`ThreadGroup`
+
+Java中用ThreadGroup来表示线程组，我们可以使用线程组对线程进行批量控制。
+
+如果在new Thread时没有显式指定，那么默认将父线程（当前执行new Thread的线程）线程组设置为自己的线程组。
+
+ThreadGroup管理着它下面的Thread，ThreadGroup是一个标准的**向下引用**的树状结构，这样设计的原因是**防止"上级"线程被"下级"线程引用而无法有效地被GC回收**
+
+**线程组常用方法**
+
+- 获取当前的线程组名
+
+```java
+Thread.currentThread().getThreadGroup().getName()
+```
+
+- 复制线程组
+
+```java
+// 获取当前的线程组
+ThreadGroup threadGroup = Thread.currentThread().getThreadGroup();
+// 复制一个线程组到一个线程数组（获取Thread信息）
+Thread[] threads = new Thread[threadGroup.activeCount()];
+threadGroup.enumerate(threads);
+```
+
+- 线程组统一异常处理
+
+```java
+package com.func.axc.threadgroup;
+ 
+public class ThreadGroupDemo {
+  public static void main(String[] args) {
+    ThreadGroup threadGroup1 = new ThreadGroup("group1") {
+            // 继承ThreadGroup并重新定义以下方法
+            // 在线程成员抛出unchecked exception
+            // 会执行此方法
+            public void uncaughtException(Thread t, Throwable e) {
+                System.out.println(t.getName() + ": " + e.getMessage());
+            }
+        };
+        
+        // 这个线程是threadGroup1的一员
+    Thread thread1 = new Thread(threadGroup1, new Runnable() {
+            public void run() {
+                // 抛出unchecked异常
+                throw new RuntimeException("测试异常");
+            }
+        });
+        
+    thread1.start();
+  }
+}
+```
 
+##### 线程优先级
 
+Java中线程优先级可以指定，范围是1~10。但是并不是所有的操作系统都支持10级优先级的划分（比如有些操作系统只支持3级划分：低，中，高），Java只是给操作系统一个优先级的**参考值**，线程最终**在操作系统的优先级**是多少还是由操作系统决定。
 
+Java默认的线程优先级为5，线程的执行顺序由调度程序来决定，线程的优先级会在线程被调用之前设定。
 
+通常情况下，高优先级的线程将会比低优先级的线程有**更高的几率**得到执行。我们使用方法`Thread`类的`setPriority()`实例方法来设定线程的优先级。
 
+```java
+public class Demo {
+    public static void main(String[] args) {
+        Thread a = new Thread();
+        System.out.println("我是默认线程优先级："+a.getPriority());
+        Thread b = new Thread();
+        b.setPriority(10);
+        System.out.println("我是设置过的线程优先级："+b.getPriority());
+    }
+}
+```
 
+既然有1-10的级别来设定了线程的优先级，这时候可能有些读者会问，那么我是不是可以在业务实现的时候，采用这种方法来指定一些线程执行的先后顺序？
 
+对于这个问题，我们的答案是:No!
 
+Java中的优先级来说不是特别的可靠，**Java程序中对线程所设置的优先级只是给操作系统一个建议，操作系统不一定会采纳。而真正的调用顺序，是由操作系统的线程调度算法决定的**。
 
+我们通过代码来验证一下：
 
+```java
+public class Demo {
+    public static class T1 extends Thread {
+        @Override
+        public void run() {
+            super.run();
+            System.out.println(String.format("当前执行的线程是：%s，优先级：%d",
+                    Thread.currentThread().getName(),
+                    Thread.currentThread().getPriority()));
+        }
+    }
 
+    public static void main(String[] args) {
+        IntStream.range(1, 10).forEach(i -> {
+            Thread thread = new Thread(new T1());
+            thread.setPriority(i);
+            thread.start();
+        });
+    }
+}
+```
 
+某次输出：
 
+```java
+当前执行的线程是：Thread-11，优先级：6
+当前执行的线程是：Thread-13，优先级：7
+当前执行的线程是：Thread-3，优先级：2
+当前执行的线程是：Thread-1，优先级：1
+当前执行的线程是：Thread-17，优先级：9
+当前执行的线程是：Thread-7，优先级：4
+当前执行的线程是：Thread-15，优先级：8
+当前执行的线程是：Thread-5，优先级：3
+当前执行的线程是：Thread-9，优先级：5
+```
 
+Java提供一个**线程调度器**来监视和控制处于**RUNNABLE状态**的线程。线程的调度策略采用**抢占式**，优先级高的线程比优先级低的线程会有更大的几率优先执行。在优先级相同的情况下，按照“先到先得”的原则。
 
+> `占位符`来表示数据将来的位置。而且它将插入格式化字符串的参数，按照顺序以逗号隔开，在字符串后面顺次排列。
 
+```java
+String.format("他的名字叫%s, 他今年%d岁.", name, age);
+```
 
 
 
+在之前，我们有谈到一个线程必然存在于一个线程组中，那么当线程和线程组的优先级不一致的时候将会怎样呢？我们用下面的案例来验证一下：
 
 
 
+```java
+public static void main(String[] args) {
+    ThreadGroup threadGroup = new ThreadGroup("t1");
+    threadGroup.setMaxPriority(6);
+    Thread thread = new Thread(threadGroup,"thread");
+    thread.setPriority(9);
+    System.out.println("我是线程组的优先级"+threadGroup.getMaxPriority());
+    System.out.println("我是线程的优先级"+thread.getPriority());
+}
+```
 
+输出：
 
+> 我是线程组的优先级6
+> 我是线程的优先级6
 
+所以，如果某个线程优先级大于线程所在**线程组的最大优先级**，那么该线程的优先级将会失效，取而代之的是线程组的最大优先级
 
 
 
+#### 进程 VS 线程
 
+进程和线程是包含关系，但是多任务既可以由多进程实现，也可以由单进程内的多线程实现，还可以混合多进程＋多线程。
 
+具体采用哪种方式，要考虑到进程和线程的特点。
 
+和多线程相比，多进程的缺点在于：
 
+- 创建进程比创建线程开销大，尤其是在Windows系统上；
+- 进程间通信比线程间通信要慢，因为线程间通信就是读写同一个变量，速度很快。
 
+而多进程的优点在于：
 
+多进程稳定性比多线程高，因为在多进程的情况下，一个进程崩溃不会影响其他进程，而在多线程的情况下，任何一个线程崩溃会直接导致整个进程崩溃。
 
+**多进程的方式也可以实现并发，为什么我们要使用多线程？**
 
+多进程方式确实可以实现并发，但使用多线程，有以下几个好处：
 
+- 进程间的通信比较复杂，而线程间的通信比较简单，通常情况下，我们需要使用共享资源，这些资源在线程间的通信比较容易。
+- 进程是重量级的，而线程是轻量级的，故多线程方式的系统开销更小。
 
+**进程和线程的区别**
 
+进程是一个独立的运行环境，而线程是在进程中执行的一个任务。他们两个本质的区别是**是否单独占有内存地址空间及其它系统资源（比如I/O）**：
 
+- 进程单独占有一定的内存地址空间，所以进程间存在内存隔离，数据是分开的，数据共享复杂但是同步简单，各个进程之间互不干扰；而线程共享所属进程占有的内存地址空间和资源，数据共享简单，但是同步复杂。
+- 进程单独占有一定的内存地址空间，一个进程出现问题不会影响其他进程，不影响主程序的稳定性，可靠性高；一个线程崩溃可能影响整个程序的稳定性，可靠性较低。
+- 进程单独占有一定的内存地址空间，进程的创建和销毁不仅需要保存寄存器和栈信息，还需要资源的分配回收以及页调度，开销较大；线程只需要保存寄存器和栈信息，开销较小。
 
+另外一个重要区别是，**进程是操作系统进行资源分配的基本单位，而线程是操作系统进行调度的基本单位**，即CPU分配时间的单位 。
 
 
 
+#### 并发编程问题
 
+##### 线程安全问题
 
+###### 原子性
 
+在并发编程中很多操作都不是原子操作，出个小题目：
 
+```java
+i = 0; // 操作1
+i++;   // 操作2
+i = j; // 操作3
+i = i + 1; // 操作4
+```
 
+上面这四个操作中有哪些是原子操作，哪些不是的？不熟悉的人可能认为这些都是原子操作，其实只有操作1是原子操作。
 
+​	操作1：对基本数据类型变量的赋值是原子操作；
 
+​	操作2：包含三个操作，读取i的值，将i加1，将值赋给i；
 
+​	操作3：读取j的值，将j的值赋给i；
 
+​	操作4：包含三个操作，读取i的值，将i加1，将值赋给i；
 
+在单线程环境下上述四个操作都不会出现问题，但是在多线程环境下，如果不通过加锁操作，往往可能得到意料之外的值。
 
+在Java语言中通过可以使用synchronize或者lock来保证原子性。
 
+###### 可见性
 
+talk is cheap，先show一段代码：
 
+```java
+/**
+* Author: leixiaoshuai
+*/
+class Test {
+  int i = 50;
+  int j = 0;
+  
+  public void update() {
+    // 线程1执行
+    i = 100;
+  }
+  
+  public int get() {
+    // 线程2执行
+    j = i;
+    return j;
+  }
+}
+```
 
+线程1执行update方法将 i 赋值为100，一般情况下线程1会在自己的工作内存中完成赋值操作，却没有及时将新值刷新到主内存中。
 
+这个时候线程2执行get方法，首先会从主内存中读取i的值，然后加载到自己的工作内存中，这个时候读取到i的值是50，再将50赋值给j，最后返回j的值就是50了。原本期望返回100，结果返回50，这就是可见性问题，线程1对变量i进行了修改，线程2没有立即看到i的新值。
 
+> 可见性：指当多个线程访问同一个变量时，一个线程修改了这个变量的值，其他线程能够立即看得到修改的值。
 
+<img src="Java.assets/thread-bring-some-problem-d91ca0c2-4f39-4e98-90e2-8acb793eb983.png" alt="img" style="zoom:33%;" />
 
+如上图每个线程都有属于自己的工作内存，工作内存和主内存间需要通过store和load等进行交互。
 
+为了解决多线程可见性问题，Java语言提供了`volatile`这个关键字。当一个共享变量被volatile修饰时，它会保证修改的值会立即被更新到主存，当有其他线程需要读取时，它会去内存中读取新值。而普通共享变量不能保证可见性，因为变量被修改后什么时候刷回到主存是不确定的，另外一个线程读的可能就是旧值。
 
+当然Java的锁机制如synchronize和lock也是可以保证可见性的，加锁可以保证在同一时刻只有一个线程在执行同步代码块，释放锁之前会将变量刷回至主存，这样也就保证了可见性。
 
+###### 有序性
 
 
 
+##### 活跃性问题
 
+为了解决`可见性`问题，我们可以采取加锁方式解决，但是如果加锁使用不当也容易引入其他问题，比如『死锁』。
 
+`活跃性问题`
 
+> 活跃性是指某件正确的事情最终会发生，当某个操作无法继续下去的时候，就会发生活跃性问题。
 
+###### 死锁
 
+死锁是指多个线程因为环形的等待锁的关系而永远的阻塞下去。一图胜千语，不多解释。
 
+![img](Java.assets/thread-bring-some-problem-d4e65d5f-3de1-4a1c-8ae1-02cb3bfb528c.png)
 
+###### 活锁
 
+死锁是两个线程都在等待对方释放锁导致阻塞。而`活锁`的意思是线程没有阻塞，还活着呢。
 
+当多个线程都在运行并且修改各自的状态，而其他线程彼此依赖这个状态，导致任何一个线程都无法继续执行，只能重复着自身的动作和修改自身的状态，这种场景就是发生了活锁。
 
+![img](Java.assets/thread-bring-some-problem-d1f9e916-0985-46fe-bf87-63fccfd27bae.png)
 
+如果大家还有疑惑，那我再举一个生活中的例子，大家平时在走路的时候，迎面走来一个人，两个人互相让路，但是又同时走到了一个方向，如果一直这样重复着避让，这俩人就是发生了活锁，学到了吧，嘿嘿。
 
+###### 饥饿问题
 
+- 如果一个线程无其他异常却迟迟不能继续运行，那基本是处于饥饿状态了。
 
+  常见有几种场景:
 
+  - 高优先级的线程一直在运行消耗CPU，所有的低优先级线程一直处于等待；
+  - 一些线程被永久堵塞在一个等待进入同步块的状态，而其他线程总是能在它之前持续地对该同步块进行访问；
 
+  有一个非常经典的饥饿问题就是`哲学家用餐问题`，如下图所示，有五个哲学家在用餐，每个人必须要同时拿两把叉子才可以开始就餐，如果哲学家1和哲学家3同时开始就餐，那哲学家2、4、5就得饿肚子等待了。
 
+  ![img](Java.assets/thread-bring-some-problem-314a47df-c953-4b7d-831c-007173981819.png)
 
+##### 性能问题
 
+前面讲到了线程安全和死锁、活锁这些问题会影响多线程执行过程，如果这些都没有发生，多线程并发一定比单线程串行执行快吗，答案是不一定，因为多线程有`创建线程`和`线程上下文切换`的开销。
 
+创建线程是直接向系统申请资源的，对操作系统来说创建一个线程的代价是十分昂贵的，需要给它分配内存、列入调度等。
 
+线程创建完之后，还会遇到线程`上下文切换`。
 
+![img](Java.assets/thread-bring-some-problem-d125d0b9-3b60-46cd-a79f-a26dd5210b44.png)
 
+CPU是很宝贵的资源速度也非常快，为了保证雨露均沾，通常为给不同的线程分配`时间片`，当CPU从执行一个线程切换到执行另一个线程时，CPU 需要保存当前线程的本地数据，程序指针等状态，并加载下一个要执行的线程的本地数据，程序指针等，这个开关被称为『上下文切换』。
 
+一般减少上下文切换的方法有：
 
+- 无锁并发编程：可以参照concurrentHashMap锁分段的思想，不同的线程处理不同段的数据，这样在多线程竞争的条件下，可以减少上下文切换的时间。
+- CAS算法，利用Atomic下使用CAS算法来更新数据，使用了乐观锁，可以有效的减少一部分不必要的锁竞争带来的上下文切换
+- 使用最少线程：避免创建不需要的线程，比如任务很少，但是创建了很多的线程，这样会造成大量的线程都处于等待状态
+- **协程**：在单线程里实现多任务的调度，并在单线程里维持多个任务间的切换
 
 
 
 
 
+### Java内存模型
 
+`Java内存模型（JMM）`    `Java运行时内存区域`
 
 
 
+#### 并发编程模型的两个关键问题
 
+- 线程间如何通信？即：线程之间以何种机制来交换信息
+- 线程间如何同步？即：线程以何种机制来控制不同线程间操作发生的相对顺序
 
+有两种并发模型可以解决这两个问题：
 
+- 消息传递并发模型
+- 共享内存并发模型
 
+这两种模型之间的区别如下表所示：
 
+![两种并发模型的比较](Java.assets/jmm-a610752d-ef73-47f2-b02c-6954eb3d62bf.png)
 
+**在Java中，使用的是共享内存并发模型**
 
 
 
+#### Java内存模型的抽象结构
 
+**运行时内存的划分**
 
+先谈一下运行时数据区，下面这张图相信大家一点都不陌生： ![Java运行时数据区域](Java.assets/jmm-0b9e4b1e-90e2-41bb-be89-f65e3a10fa08.png)
 
 
 
+对于每一个线程来说，栈都是私有的，而堆是共有的
 
+也就是说在栈中的变量（局部变量、方法定义参数、异常处理器参数）不会在线程之间共享，也就不会有内存可见性（下文会说到）的问题，也不受内存模型的影响。而在堆中的变量是共享的，本文称为共享变量。
 
+所以，内存可见性是针对的**共享变量**
 
+> 线程之间的共享变量存在主内存中，每个线程都有一个私有的本地内存，存储了该线程以读、写共享变量的副本。本地内存是Java内存模型的一个抽象概念，并不真实存在。它涵盖了缓存、写缓冲区、寄存器等。
 
+Java线程之间的通信由Java内存模型（简称JMM）控制，从抽象的角度来说，JMM定义了线程和主内存之间的抽象关系。JMM的抽象示意图如图所示：
 
+![JMM抽象示意图](Java.assets/jmm-f02219aa-e762-4df0-ac08-6f4cceb535c2.jpg)
 
+从图中可以看出：
 
+1. 所有的共享变量都存在主内存中。
+2. 每个线程都保存了一份该线程使用到的共享变量的副本。
+3. 如果线程A与线程B之间要通信的话，必须经历下面2个步骤：
+   1. 线程A将本地内存A中更新过的共享变量刷新到主内存中去。
+   2. 线程B到主内存中去读取线程A之前已经更新过的共享变量。
 
+**所以，线程A无法直接访问线程B的工作内存，线程间通信必须经过主内存。**
 
+注意，根据JMM的规定，**线程对共享变量的所有操作都必须在自己的本地内存中进行，不能直接从主内存中读取**。
 
+所以线程B并不是直接去主内存中读取共享变量的值，而是先在本地内存B中找到这个共享变量，发现这个共享变量已经被更新了，然后本地内存B去主内存中读取这个共享变量的新值，并拷贝到本地内存B中，最后线程B再读取本地内存B中的新值。
 
+那么怎么知道这个共享变量的被其他线程更新了呢？这就是JMM的功劳了，也是JMM存在的必要性之一。**JMM通过控制主内存与每个线程的本地内存之间的交互，来提供内存可见性保证**。
 
 
 
@@ -1388,49 +1624,990 @@ private void testStateNew() {
 
 
 
+### volatile
 
+#### volatile的内存语义
 
+在Java中，volatile关键字有特殊的内存语义。volatile主要有以下两个功能：
 
+- 保证变量的**内存可见性**
+- 禁止volatile变量与普通变量**重排序**（JSR133提出，Java 5 开始才有这个“增强的volatile内存语义”）
 
+#### 内存可见性
 
+以一段示例代码开始：
 
+```java
+public class VolatileExample {
+    int a = 0;
+    volatile boolean flag = false;
+    
+    public void writer() {
+        a = 1; // step 1
+        flag = true; // step 2
+    }
+    
+    public void reader() {
+        if (flag) { // step 3
+            System.out.println(a); // step 4
+        }
+    }
+}
+```
 
+在这段代码里，我们使用`volatile`关键字修饰了一个`boolean`类型的变量`flag`。
 
+所谓内存可见性，指的是当一个线程对`volatile`修饰的变量进行**写操作**（比如step 2）时，JMM会立即把该线程对应的本地内存中的共享变量的值刷新到主内存；当一个线程对`volatile`修饰的变量进行**读操作**（比如step 3）时，JMM会把立即该线程对应的本地内存置为无效，从主内存中读取共享变量的值。
 
 
 
+#### volatile的用途
 
+在保证内存可见性这一点上，volatile有着与锁相同的内存语义，所以可以作为一个“轻量级”的锁来使用。但由于volatile仅仅保证对单个volatile变量的读/写具有原子性，而锁可以保证整个**临界区代码**的执行具有原子性。所以**在功能上，锁比volatile更强大；在性能上，volatile更有优势**。
 
 
 
 
 
+### synchronized
 
+说到锁，我们通常会谈到`synchronized`这个关键字。它翻译成中文就是“同步”的意思。
 
+我们通常使用`synchronized`关键字来给一段代码或一个方法上锁。它通常有以下三种形式：
 
 
 
+```java
+// 关键字在实例方法上，锁为当前实例
+public synchronized void instanceLock() {
+    // code
+}
 
+// 关键字在静态方法上，锁为当前Class对象
+public static synchronized void classLock() {
+    // code
+}
 
+// 关键字在代码块上，锁为括号里面的对象
+public void blockLock() {
+    Object o = new Object();
+    synchronized (o) {
+        // code
+    }
+}
+```
 
 
 
 
 
+## 05-异常
 
+在计算机程序运行的过程中，总是会出现各种各样的错误。
 
+所以，一个健壮的程序必须处理各种各样的错误。
 
+所谓错误，就是程序调用某个函数的时候，如果失败了，就表示出错。
 
+调用方如何获知调用失败的信息？有两种方法：
 
+- 约定返回错误码
 
+例如，处理一个文件，如果返回`0`，表示成功，返回其他整数，表示约定的错误码
 
+```java
+int code = processFile("C:\\test.txt");
+if (code == 0) {
+    // ok:
+} else {
+    // error:
+    switch (code) {
+    case 1:
+        // file not found:
+    case 2:
+        // no read permission:
+    default:
+        // unknown error:
+    }
+}
+```
 
+因为使用`int`类型的错误码，想要处理就非常麻烦。这种方式常见于底层C函数。
 
+- 在语言层面提供一个异常处理机制
 
+Java内置了一套异常处理机制，总是使用异常来表示错误。
 
+异常是一种`class`，因此它本身带有类型信息。异常可以在任何地方抛出，但只需要在上层捕获，这样就和方法调用分离了：
 
+```java
+try {
+    String s = processFile(“C:\\test.txt”);
+    // ok:
+} catch (FileNotFoundException e) {
+    // file not found:
+} catch (SecurityException e) {
+    // no read permission:
+} catch (IOException e) {
+    // io error:
+} catch (Exception e) {
+    // other error:
+}
+```
 
-# -----黑马教程笔记-------
+因为Java的异常是`class`，它的继承关系如下：
+
+```ascii
+                     ┌───────────┐
+                     │  Object   │
+                     └───────────┘
+                           ▲
+                           │
+                     ┌───────────┐
+                     │ Throwable │
+                     └───────────┘
+                           ▲
+                 ┌─────────┴─────────┐
+                 │                   │
+           ┌───────────┐       ┌───────────┐
+           │   Error   │       │ Exception │
+           └───────────┘       └───────────┘
+                 ▲                   ▲
+         ┌───────┘              ┌────┴──────────┐
+         │                      │               │
+┌─────────────────┐    ┌─────────────────┐┌───────────┐
+│OutOfMemoryError │... │RuntimeException ││IOException│...
+└─────────────────┘    └─────────────────┘└───────────┘
+                                ▲
+                    ┌───────────┴─────────────┐
+                    │                         │
+         ┌─────────────────────┐ ┌─────────────────────────┐
+         │NullPointerException │ │IllegalArgumentException │...
+         └─────────────────────┘ └─────────────────────────┘
+```
+
+从继承关系可知：`Throwable`是异常体系的根，它继承自`Object`。`Throwable`有两个体系：`Error`和`Exception`，`Error`表示严重的错误，程序对此一般无能为力，例如：
+
+- `OutOfMemoryError`：内存耗尽
+- `NoClassDefFoundError`：无法加载某个Class
+- `StackOverflowError`：栈溢出
+
+而`Exception`则是运行时的错误，它可以被捕获并处理。
+
+某些异常是应用程序逻辑处理的一部分，应该捕获并处理。例如：
+
+- `NumberFormatException`：数值类型的格式错误
+- `FileNotFoundException`：未找到文件
+- `SocketException`：读取网络失败
+
+还有一些异常是程序逻辑编写不对造成的，应该修复程序本身。例如：
+
+- `NullPointerException`：对某个`null`的对象调用方法或字段
+- `IndexOutOfBoundsException`：数组索引越界
+
+`Exception`又分为两大类：
+
+1. `RuntimeException`以及它的子类；
+2. 非`RuntimeException`（包括`IOException`、`ReflectiveOperationException`等等）
+
+Java规定：
+
+- 必须捕获的异常，包括`Exception`及其子类，但不包括`RuntimeException`及其子类，这种类型的异常称为Checked Exception。
+- 不需要捕获的异常，包括`Error`及其子类，`RuntimeException`及其子类。
+
+>  注意：编译器对RuntimeException及其子类不做强制捕获要求，不是指应用程序本身不应该捕获并处理RuntimeException。是否需要捕获，具体问题具体分析。
+>
+
+
+
+### 捕获异常
+
+捕获异常使用`try...catch`语句，把可能发生异常的代码放到`try {...}`中，然后使用`catch`捕获对应的`Exception`及其子类：
+
+```java
+static byte[] toGBK(String s) {
+    try {
+        return s.getBytes("GBK");
+    } catch (UnsupportedEncodingException e) {
+        // 先记下来再说:
+        e.printStackTrace();
+        // System.out.println(e);
+    }
+    return null;
+```
+
+所有异常都可以调用`printStackTrace()`方法打印异常栈，这是一个简单有用的快速打印异常的方法。
+
+
+
+Java使用异常来表示错误，并通过`try ... catch`捕获异常；
+
+Java的异常是`class`，并且从`Throwable`继承；
+
+`Error`是无需捕获的严重错误，`Exception`是应该捕获的可处理的错误；
+
+`RuntimeException`无需强制捕获，非`RuntimeException`（Checked Exception）需强制捕获，或者用`throws`声明；
+
+不推荐捕获了异常但不进行任何处理。
+
+#### 多catch语句
+
+可以使用多个`catch`语句，每个`catch`分别捕获对应的`Exception`及其子类。JVM在捕获到异常后，会从上到下匹配`catch`语句，匹配到某个`catch`后，执行`catch`代码块，然后*不再*继续匹配。
+
+简单地说就是：多个`catch`语句只有一个能被执行。
+
+存在多个`catch`的时候，`catch`的顺序非常重要：子类必须写在前面。例如：
+
+```java
+public static void main(String[] args) {
+    try {
+        process1();
+        process2();
+        process3();
+    } catch (IOException e) {
+        System.out.println("IO error");
+    } catch (UnsupportedEncodingException e) { // 永远捕获不到
+        System.out.println("Bad encoding");
+    }
+}
+```
+
+对于上面的代码，`UnsupportedEncodingException`异常是永远捕获不到的，因为它是`IOException`的子类。当抛出`UnsupportedEncodingException`异常时，会被`catch (IOException e) { ... }`捕获并执行。
+
+#### finally语句
+
+Java的`try ... catch`机制还提供了`finally`语句，`finally`语句块保证有无错误都会执行。上述代码可以改写如下：
+
+```java
+public static void main(String[] args) {
+    try {
+        process1();
+        process2();
+        process3();
+    } catch (UnsupportedEncodingException e) {
+        System.out.println("Bad encoding");
+    } catch (IOException e) {
+        System.out.println("IO error");
+    } finally {
+        System.out.println("END");
+    }
+}
+```
+
+注意`finally`有几个特点：
+
+1. `finally`语句不是必须的，可写可不写；
+2. `finally`总是最后执行。
+
+如果没有发生异常，就正常执行`try { ... }`语句块，然后执行`finally`。如果发生了异常，就中断执行`try { ... }`语句块，然后跳转执行匹配的`catch`语句块，最后执行`finally`。
+
+可见，`finally`是用来保证一些代码必须执行的。
+
+某些情况下，可以没有`catch`，只使用`try ... finally`结构。例如：
+
+```java
+void process(String file) throws IOException {
+    try {
+        ...
+    } finally {
+        System.out.println("END");
+    }
+}
+```
+
+因为方法声明了可能抛出的异常，所以可以不写`catch`
+
+#### 捕获多种异常
+
+如果某些异常的处理逻辑相同，但是异常本身不存在继承关系，那么就得编写多条`catch`子句：
+
+```java
+public static void main(String[] args) {
+    try {
+        process1();
+        process2();
+        process3();
+    } catch (IOException e) {
+        System.out.println("Bad input");
+    } catch (NumberFormatException e) {
+        System.out.println("Bad input");
+    } catch (Exception e) {
+        System.out.println("Unknown error");
+    }
+}
+```
+
+因为处理`IOException`和`NumberFormatException`的代码是相同的，所以我们可以把它两用`|`合并到一起：
+
+```java
+public static void main(String[] args) {
+    try {
+        process1();
+        process2();
+        process3();
+    } catch (IOException | NumberFormatException e) { // IOException或NumberFormatException
+        System.out.println("Bad input");
+    } catch (Exception e) {
+        System.out.println("Unknown error");
+    }
+}
+```
+
+
+
+**小结：**
+
+使用`try ... catch ... finally`时：
+
+- 多个`catch`语句的匹配顺序非常重要，子类必须放在前面；
+- `finally`语句保证了有无异常都会执行，它是可选的；
+- 一个`catch`语句也可以匹配多个非继承关系的异常。
+
+
+
+### 抛出异常
+
+#### 异常的传播
+
+当某个方法抛出了异常时，如果当前方法没有捕获异常，异常就会被**抛到上层**调用方法，直到遇到某个`try ... catch`被捕获为止：
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        try {
+            process1();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    static void process1() {
+        process2();
+    }
+
+    static void process2() {
+        Integer.parseInt(null); // 会抛出NumberFormatException
+    }
+}
+
+```
+
+`printStackTrace()`对于调试错误非常有用，上述信息表示：`NumberFormatException`是在`java.lang.Integer.parseInt`方法中被抛出的，从下往上看，调用层次依次是：
+
+1. `main()`调用`process1()`；
+2. `process1()`调用`process2()`；
+3. `process2()`调用`Integer.parseInt(String)`；
+4. `Integer.parseInt(String)`调用`Integer.parseInt(String, int)`。
+
+查看`Integer.java`源码可知，抛出异常的方法代码如下：
+
+```java
+public static int parseInt(String s, int radix) throws NumberFormatException {
+    if (s == null) {
+        throw new NumberFormatException("null");
+    }
+    ...
+}
+```
+
+并且，每层调用均给出了源代码的行号，可直接定位。
+
+#### 抛出异常
+
+当发生错误时，例如，用户输入了非法的字符，我们就可以抛出异常。
+
+**如何抛出异常**？参考`Integer.parseInt()`方法，抛出异常分两步：
+
+1. 创建某个`Exception`的实例；
+2. 用`throw`语句抛出。
+
+下面是一个例子：
+
+```java
+void process2(String s) {
+    if (s==null) {
+        NullPointerException e = new NullPointerException();
+        throw e;
+    }
+}
+```
+
+实际上，绝大部分抛出异常的代码都会合并写成一行：
+
+```java
+void process2(String s) {
+    if (s==null) {
+        throw new NullPointerException();
+    }
+}
+```
+
+
+
+如果一个方法捕获了某个异常后，又在`catch`子句中抛出新的异常，就相当于把抛出的异常类型“转换”了：
+
+```
+void process1(String s) {
+    try {
+        process2();
+    } catch (NullPointerException e) {
+        throw new IllegalArgumentException();
+    }
+}
+
+void process2(String s) {
+    if (s==null) {
+        throw new NullPointerException();
+    }
+}
+```
+
+当`process2()`抛出`NullPointerException`后，被`process1()`捕获，然后抛出`IllegalArgumentException()`
+
+如果在`main()`中捕获`IllegalArgumentException`，我们看看打印的异常栈：
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        try {
+            process1();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    static void process1() {
+        try {
+            process2();
+        } catch (NullPointerException e) {
+            throw new IllegalArgumentException();
+        }
+    }
+
+    static void process2() {
+        throw new NullPointerException();
+    }
+}
+
+```
+
+打印出的异常栈类似：
+
+```java
+java.lang.IllegalArgumentException
+    at Main.process1(Main.java:15)
+    at Main.main(Main.java:5)
+```
+
+这说明新的异常丢失了原始异常信息，我们已经看不到原始异常`NullPointerException`的信息了。
+
+为了能**追踪到完整的异常栈**，在构造异常的时候，把原始的`Exception`实例传进去，新的`Exception`就可以持有原始`Exception`信息。对上述代码改进如下：
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        try {
+            process1();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    static void process1() {
+        try {
+            process2();
+        } catch (NullPointerException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    static void process2() {
+        throw new NullPointerException();
+    }
+}
+
+```
+
+运行上述代码，打印出的异常栈类似：
+
+```java
+java.lang.IllegalArgumentException: java.lang.NullPointerException
+    at Main.process1(Main.java:15)
+    at Main.main(Main.java:5)
+Caused by: java.lang.NullPointerException
+    at Main.process2(Main.java:20)
+    at Main.process1(Main.java:13)
+```
+
+注意到`Caused by: Xxx`，说明捕获的`IllegalArgumentException`并不是造成问题的根源，根源在于`NullPointerException`，是在`Main.process2()`方法抛出的。
+
+在代码中获取原始异常可以使用`Throwable.getCause()`方法。如果返回`null`，说明已经是“根异常”了。
+
+有了完整的异常栈的信息，我们才能快速定位并修复代码的问题。
+
+ 捕获到异常并再次抛出时，一定要留住原始异常，否则很难定位第一案发现场！
+
+
+
+- 如果我们在`try`或者`catch`语句块中抛出异常，`finally`语句是否会执行？
+
+例如：
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        try {
+            Integer.parseInt("abc");
+        } catch (Exception e) {
+            System.out.println("catched");
+            throw new RuntimeException(e);
+        } finally {
+            System.out.println("finally");
+        }
+    }
+}
+
+```
+
+```java
+catched
+finally
+Exception in thread "main" java.lang.RuntimeException: java.lang.NumberFormatException: For input string: "abc"
+    at Main.main(Main.java:8)
+Caused by: java.lang.NumberFormatException: For input string: "abc"
+    at ...
+```
+
+第一行打印了`catched`，说明进入了`catch`语句块。第二行打印了`finally`，说明执行了`finally`语句块。
+
+因此，在`catch`中抛出异常，不会影响`finally`的执行。JVM会先执行`finally`，然后抛出异常。
+
+
+
+#### 异常屏蔽
+
+- 如果在执行`finally`语句时抛出异常，那么，`catch`语句的异常还能否继续抛出？例如：
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        try {
+            Integer.parseInt("abc");
+        } catch (Exception e) {
+            System.out.println("catched");
+            throw new RuntimeException(e);
+        } finally {
+            System.out.println("finally");
+            throw new IllegalArgumentException();
+        }
+    }
+}
+```
+
+执行上述代码，发现异常信息如下：
+
+```java
+catched
+finally
+Exception in thread "main" java.lang.IllegalArgumentException
+    at Main.main(Main.java:11)
+```
+
+这说明`finally`抛出异常后，原来在`catch`中准备抛出的异常就“消失”了，因为只能抛出一个异常。没有被抛出的异常称为“被屏蔽”的异常（Suppressed Exception）。
+
+在极少数的情况下，我们需要获知所有的异常。如何保存所有的异常信息？方法是先用`origin`变量保存原始异常，然后调用`Throwable.addSuppressed()`，把原始异常添加进来，最后在`finally`抛出：
+
+```java
+public class Main {
+    public static void main(String[] args) throws Exception {
+        Exception origin = null;
+        try {
+            System.out.println(Integer.parseInt("abc"));
+        } catch (Exception e) {
+            origin = e;
+            throw e;
+        } finally {
+            Exception e = new IllegalArgumentException();
+            if (origin != null) {
+                e.addSuppressed(origin);
+            }
+            throw e;
+        }
+    }
+}
+```
+
+当`catch`和`finally`都抛出了异常时，虽然`catch`的异常被屏蔽了，但是，`finally`抛出的异常仍然包含了它：
+
+```java
+Exception in thread "main" java.lang.IllegalArgumentException
+    at Main.main(Main.java:11)
+Suppressed: java.lang.NumberFormatException: For input string: "abc"
+    at java.base/java.lang.NumberFormatException.forInputString(NumberFormatException.java:65)
+    at java.base/java.lang.Integer.parseInt(Integer.java:652)
+    at java.base/java.lang.Integer.parseInt(Integer.java:770)
+    at Main.main(Main.java:6)
+```
+
+通过`Throwable.getSuppressed()`可以获取所有的`Suppressed Exception`。
+
+绝大多数情况下，在`finally`中不要抛出异常。因此，我们通常不需要关心`Suppressed Exception`。
+
+**小结：**
+
+调用`printStackTrace()`可以打印异常的传播栈，对于调试非常有用；
+
+捕获异常并再次抛出新的异常时，应该持有原始异常信息；
+
+通常不要在`finally`中抛出异常。如果在`finally`中抛出异常，应该原始异常加入到原有异常中。调用方可通过`Throwable.getSuppressed()`获取所有添加的`Suppressed Exception`
+
+
+
+
+
+### 自定义异常
+
+Java标准库定义的常用异常包括：
+
+```ascii
+Exception
+│
+├─ RuntimeException
+│  │
+│  ├─ NullPointerException
+│  │
+│  ├─ IndexOutOfBoundsException
+│  │
+│  ├─ SecurityException
+│  │
+│  └─ IllegalArgumentException
+│     │
+│     └─ NumberFormatException
+│
+├─ IOException
+│  │
+│  ├─ UnsupportedCharsetException
+│  │
+│  ├─ FileNotFoundException
+│  │
+│  └─ SocketException
+│
+├─ ParseException
+│
+├─ GeneralSecurityException
+│
+├─ SQLException
+│
+└─ TimeoutException
+```
+
+当我们在代码中需要抛出异常时，尽量使用JDK已定义的异常类型。例如，参数检查不合法，应该抛出`IllegalArgumentException`：
+
+```java
+static void process1(int age) {
+    if (age <= 0) {
+        throw new IllegalArgumentException();
+    }
+}
+```
+
+在一个大型项目中，可以自定义新的异常类型，但是，保持一个合理的异常继承体系是非常重要的。
+
+一个常见的做法是自定义一个`BaseException`作为“根异常”，然后，派生出各种业务类型的异常。
+
+`BaseException`需要从一个适合的`Exception`派生，通常建议从`RuntimeException`派生：
+
+```java
+public class BaseException extends RuntimeException {
+}
+```
+
+其他业务类型的异常就可以从`BaseException`派生：
+
+```java
+public class UserNotFoundException extends BaseException {
+}
+
+public class LoginFailedException extends BaseException {
+}
+
+...
+```
+
+自定义的`BaseException`应该提供多个构造方法：
+
+```java
+public class BaseException extends RuntimeException {
+    public BaseException() {
+        super();
+    }
+
+    public BaseException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public BaseException(String message) {
+        super(message);
+    }
+
+    public BaseException(Throwable cause) {
+        super(cause);
+    }
+}
+```
+
+上述构造方法实际上都是原样照抄`RuntimeException`。这样，抛出异常的时候，就可以选择合适的构造方法。通过IDE可以根据父类快速生成子类的构造方法。
+
+**小结：**
+
+抛出异常时，尽量复用JDK已定义的异常类型；
+
+自定义异常体系时，推荐从`RuntimeException`派生“根异常”，再派生出业务异常；
+
+自定义异常时，应该提供多种构造方法。
+
+### NullPointerException
+
+在所有的`RuntimeException`异常中，Java程序员最熟悉的恐怕就是`NullPointerException`了。
+
+`NullPointerException`即空指针异常，俗称NPE。如果一个对象为`null`，调用其方法或访问其字段就会产生`NullPointerException`，这个异常通常是由JVM抛出的，例如：
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        String s = null;
+        System.out.println(s.toLowerCase());
+    }
+}
+```
+
+指针这个概念实际上源自C语言，Java语言中并无指针。我们定义的变量实际上是引用，Null Pointer更确切地说是Null Reference，不过两者区别不大。
+
+#### 处理 NullPointerException
+
+如果遇到`NullPointerException`，我们应该如何处理？首先，必须明确，`NullPointerException`是一种代码逻辑错误，遇到`NullPointerException`，遵循原则是早暴露，早修复，严禁使用`catch`来隐藏这种编码错误：
+
+```java
+// 错误示例: 捕获NullPointerException
+try {
+    transferMoney(from, to, amount);
+} catch (NullPointerException e) {
+}
+```
+
+好的编码习惯可以极大地降低`NullPointerException`的产生，例如：
+
+成员变量在定义时初始化：
+
+```
+public class Person {
+    private String name = "";
+}
+```
+
+使用空字符串`""`而不是默认的`null`可避免很多`NullPointerException`，编写业务逻辑时，用空字符串`""`表示未填写比`null`安全得多。
+
+返回空字符串`""`、空数组而不是`null`：
+
+```
+public String[] readLinesFromFile(String file) {
+    if (getFileSize(file) == 0) {
+        // 返回空数组而不是null:
+        return new String[0];
+    }
+    ...
+}
+```
+
+这样可以使得调用方无需检查结果是否为`null`。
+
+如果调用方一定要根据`null`判断，比如返回`null`表示文件不存在，那么考虑返回`Optional<T>`：
+
+```
+public Optional<String> readFromFile(String file) {
+    if (!fileExist(file)) {
+        return Optional.empty();
+    }
+    ...
+}
+```
+
+这样调用方必须通过`Optional.isPresent()`判断是否有结果。
+
+#### 定位NullPointerException
+
+如果产生了`NullPointerException`，例如，调用`a.b.c.x()`时产生了`NullPointerException`，原因可能是：
+
+- `a`是`null`；
+- `a.b`是`null`；
+- `a.b.c`是`null`；
+
+确定到底是哪个对象是`null`以前只能打印这样的日志：
+
+```
+System.out.println(a);
+System.out.println(a.b);
+System.out.println(a.b.c);
+```
+
+从Java 14开始，如果产生了`NullPointerException`，JVM可以给出详细的信息告诉我们`null`对象到底是谁。我们来看例子：
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Person p = new Person();
+        System.out.println(p.address.city.toLowerCase());
+    }
+}
+
+class Person {
+    String[] name = new String[2];
+    Address address = new Address();
+}
+
+class Address {
+    String city;
+    String street;
+    String zipcode;
+}
+```
+
+可以在`NullPointerException`的详细信息中看到类似`... because "<local1>.address.city" is null`，意思是`city`字段为`null`，这样我们就能快速定位问题所在。
+
+这种增强的`NullPointerException`详细信息是Java 14新增的功能，但默认是关闭的，我们可以给JVM添加一个`-XX:+ShowCodeDetailsInExceptionMessages`参数启用它：
+
+```java
+java -XX:+ShowCodeDetailsInExceptionMessages Main.java
+```
+
+
+
+**小结**
+
+`NullPointerException`是Java代码常见的逻辑错误，应当早暴露，早修复；
+
+可以启用Java 14的增强异常信息来查看`NullPointerException`的详细错误信息。
+
+
+
+## 06-网络编程
+
+### 网络编程基础
+
+**IP地址**
+
+IPv4采用32位地址，类似`101.202.99.12`，而IPv6采用128位地址，类似`2001:0DA8:100A:0000:0000:1020:F2F3:1428`。IPv4地址总共有232个（大约42亿），而IPv6地址则总共有2128个（大约340万亿亿亿亿），IPv4的地址目前已耗尽，而IPv6的地址是根本用不完的。
+
+IP地址又分为公网IP地址和内网IP地址。公网IP地址可以直接被访问，内网IP地址只能在内网访问。内网IP地址类似于：
+
+- 192.168.x.x
+- 10.x.x.x
+
+有一个特殊的IP地址，称之为本机地址，它总是`127.0.0.1`。
+
+IPv4地址实际上是一个32位整数。例如：
+
+```ascii
+1707762444 = 0x65ca630c
+           = 65  ca  63 0c
+           = 101.202.99.12
+```
+
+如果一台计算机只有一个网卡，并且接入了网络，那么，它有一个本机地址`127.0.0.1`，还有一个IP地址，例如`101.202.99.12`，可以通过这个IP地址接入网络。
+
+如果一台计算机有两块网卡，那么除了本机地址，它可以有两个IP地址，可以分别接入两个网络。通常连接两个网络的设备是路由器或者交换机，它至少有两个IP地址，分别接入不同的网络，让网络之间连接起来。
+
+如果两台计算机位于同一个网络，那么他们之间可以直接通信，因为他们的IP地址前段是相同的，也就是网络号是相同的。网络号是IP地址通过子网掩码过滤后得到的。例如：
+
+某台计算机的IP是`101.202.99.2`，子网掩码是`255.255.255.0`，那么计算该计算机的网络号是：
+
+```
+IP = 101.202.99.2
+Mask = 255.255.255.0
+Network = IP & Mask = 101.202.99.0
+```
+
+每台计算机都需要正确配置IP地址和子网掩码，根据这两个就可以计算网络号，如果两台计算机计算出的网络号相同，说明两台计算机在同一个网络，可以直接通信。如果两台计算机计算出的网络号不同，那么两台计算机不在同一个网络，不能直接通信，它们之间必须通过路由器或者交换机这样的网络设备间接通信，我们把这种设备称为网关。
+
+网关的作用就是连接多个网络，负责把来自一个网络的数据包发到另一个网络，这个过程叫路由。
+
+所以，一台计算机的一个网卡会有3个关键配置：
+
+![network](Java.assets/l.png)
+
+- IP地址，例如：`10.0.2.15`
+- 子网掩码，例如：`255.255.255.0`
+- 网关的IP地址，例如：`10.0.2.2`
+
+**域名**
+
+因为直接记忆IP地址非常困难，所以我们通常使用域名访问某个特定的服务。域名解析服务器DNS负责把域名翻译成对应的IP，客户端再根据IP地址访问服务器。
+
+用`nslookup`可以查看域名对应的IP地址：
+
+```
+$ nslookup www.liaoxuefeng.com
+Server:  xxx.xxx.xxx.xxx
+Address: xxx.xxx.xxx.xxx#53
+
+Non-authoritative answer:
+Name:    www.liaoxuefeng.com
+Address: 47.98.33.223
+```
+
+有一个特殊的本机域名`localhost`，它对应的IP地址总是本机地址`127.0.0.1`。
+
+### 网络模型
+
+由于计算机网络从底层的传输到高层的软件设计十分复杂，要合理地设计计算机网络模型，必须采用分层模型，每一层负责处理自己的操作。OSI（Open System Interconnect）网络模型是ISO组织定义的一个计算机互联的标准模型，注意它只是一个定义，目的是为了简化网络各层的操作，提供标准接口便于实现和维护。这个模型从上到下依次是：
+
+- 应用层，提供应用程序之间的通信；
+- 表示层：处理数据格式，加解密等等；
+- 会话层：负责建立和维护会话；
+- 传输层：负责提供端到端的可靠传输；
+- 网络层：负责根据目标地址选择路由来传输数据；
+- 链路层和物理层负责把数据进行分片并且真正通过物理网络传输，例如，无线网、光纤等。
+
+互联网实际使用的TCP/IP模型并不是对应到OSI的7层模型，而是大致对应OSI的5层模型：
+
+| OSI    | TCP/IP     |
+| :----- | :--------- |
+| 应用层 | 应用层     |
+| 表示层 |            |
+| 会话层 |            |
+| 传输层 | 传输层     |
+| 网络层 | IP层       |
+| 链路层 | 网络接口层 |
+| 物理层 |            |
+
+
+
+
+
+**小结**
+
+计算机网络的基本概念主要有：
+
+- 计算机网络：由两台或更多计算机组成的网络；
+- 互联网：连接网络的网络；
+- IP地址：计算机的网络接口（通常是网卡）在网络中的唯一标识；
+- 网关：负责连接多个网络，并在多个网络之间转发数据的计算机，通常是路由器或交换机；
+- 网络协议：互联网使用TCP/IP协议，它泛指互联网协议簇；
+- IP协议：一种分组交换传输协议；
+- TCP协议：一种面向连接，可靠传输的协议；
+- UDP协议：一种无连接，不可靠传输的协议。
+
+
+
+
+
+
+
+
+
+
+
+# -----黑马笔记-------
 
 ### String与integer
 
