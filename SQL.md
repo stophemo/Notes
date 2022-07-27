@@ -933,21 +933,109 @@ Serializable是最严格的隔离级别。在Serializable隔离级别下，所�
 
 
 
+## SQL语法补充
+
+### case ... when ...
+
+```sql
+UPDATE salary
+SET sex = case sex
+WHEN 'f' THEN "m"
+ELSE 'f' END
+```
+
+### if 表达式
+
+```sql
+IF( expr1 , expr2 , expr3 )
+```
+
+expr1 的值为 TRUE，则返回值为 expr2 
+expr1 的值为FALSE，则返回值为 expr3
+
+
+
+### mod取余 
+
+```sql
+mod(id,2) = 1 
+```
+
+获得奇数id 
 
 
 
 
 
+### delete 中的自连接
+
+编写一个 SQL 删除语句来 删除 所有重复的电子邮件，只保留一个id最小的唯一电子邮件。
+
+示例 1:
+
+输入: 
+Person 表:
++----+------------------+
+| id | email            |
++----+------------------+
+| 1  | john@example.com |
+| 2  | bob@example.com  |
+| 3  | john@example.com |
++----+------------------+
+输出: 
++----+------------------+
+| id | email            |
++----+------------------+
+| 1  | john@example.com |
+| 2  | bob@example.com  |
++----+------------------+
+解释: john@example.com重复两次。我们保留最小的Id = 1。
+
+```sql
+delete p1 
+from person p1, person p2
+where p1.email = p2.email 
+and p1.id > p2.id
+```
 
 
 
 
 
+### limit m,n
+
+limit 2,1：跳过2条取出1条数据,即读取第3条数据
+
+limit 2 offset 1：跳过1条取两条，即读取第2,3条
 
 
 
+### rank() over(业务逻辑)
 
+作用：查出指定条件后的进行排名，条件相同排名相同，排名间断不连续。
 
+说明：例如学生排名，使用这个函数，成绩相同的两名是并列，下一位同学空出所占的名次。即：1 1 3 4 5 5 7
 
+SELECT id, name, score, rank() over(ORDER BY score DESC) AS 'rank' FROM student 
 
+![img](SQL.assets/20201020232443326.png)
 
+### dense_rank() over(业务逻辑)
+
+作用：查出指定条件后的进行排名，条件相同排名相同，排名间断不连续。
+
+说明：和rank() over 的作用相同，区别在于dense_rank() over 排名是密集连续的。例如学生排名，使用这个函数，成绩相同的两名是并列，下一位同学接着下一个名次。即：1 1 2 3 4 5 5 6
+
+SELECT id, name, score, dense_rank() over(ORDER BY score DESC) AS 'rank' FROM student 
+
+![img](SQL.assets/20201020232602575.png)
+
+### row_number() over(业务逻辑)
+
+作用：查出指定条件后的进行排名，条件相同排名也不相同，排名间断不连续。
+
+说明：这个函数不需要考虑是否并列，即使根据条件查询出来的数值相同也会进行连续排序。即：1 2 3 4 5 6
+
+SELECT id, name, score, row_number() over(ORDER BY score DESC) AS 'rank' FROM student 
+
+![img](SQL.assets/20201020232738202.png)
