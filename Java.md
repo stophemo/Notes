@@ -1,3 +1,11 @@
+
+
+## 
+
+
+
+
+
 # Java
 
 ## 00-原文链接
@@ -7,6 +15,264 @@
 **[JavaGuide](https://javaguide.cn)**
 
 **[Java教程 - 廖雪峰](https://www.liaoxuefeng.com/wiki/1252599548343744)**
+
+## 01-面对对象基础
+
+### 方法重载
+
+**定义：**
+
+在一个类中，我们可以定义多个方法。如果有一系列方法，它们的功能都是类似的，只有参数有所不同，那么，可以把这一组方法名做成*同名*方法。例如，在`Hello`类中，定义多个`hello()`方法：
+
+```java
+class Hello {
+    public void hello() {
+        System.out.println("Hello, world!");
+    }
+
+    public void hello(String name) {
+        System.out.println("Hello, " + name + "!");
+    }
+
+    public void hello(String name, int age) {
+        if (age < 18) {
+            System.out.println("Hi, " + name + "!");
+        } else {
+            System.out.println("Hello, " + name + "!");
+        }
+    }
+}
+```
+
+这种方法名相同，但各自的参数不同，称为方法重载（`Overload`）。
+
+**注意**：方法重载的返回值类型通常都是相同的。
+
+方法重载的目的是，功能类似的方法使用同一名字，更容易记住，因此，调用起来更简单
+
+举个**例子**，`String`类提供了多个重载方法`indexOf()`，可以查找子串：
+
+- `int indexOf(int ch)`：根据字符的Unicode码查找；
+- `int indexOf(String str)`：根据字符串查找；
+- `int indexOf(int ch, int fromIndex)`：根据字符查找，但指定起始位置；
+- `int indexOf(String str, int fromIndex)`根据字符串查找，但指定起始位置。
+
+
+
+### 继承
+
+Java使用`extends`关键字来实现继承：
+
+```java
+class Person {
+    private String name;
+    private int age;
+
+    public String getName() {...}
+    public void setName(String name) {...}
+    public int getAge() {...}
+    public void setAge(int age) {...}
+}
+
+class Student extends Person {
+    // 不要重复name和age字段/方法,
+    // 只需要定义新增score字段/方法:
+    private int score;
+
+    public int getScore() { … }
+    public void setScore(int score) { … }
+}
+```
+
+可见，通过继承，`Student`只需要编写额外的功能，不再需要重复代码。
+
+ 注意：子类自动获得了父类的所有字段，严禁定义与父类重名的字段！
+
+在OOP的术语中，我们把`Person`称为**超类**（super class），**父类**（parent class），**基类**（base class），把`Student`称为**子类**（subclass），扩展类**（extended class）。
+
+#### 继承树
+
+注意到我们在定义`Person`的时候，没有写`extends`。在Java中，没有明确写`extends`的类，编译器会自动加上`extends Object`。所以，任何类，除了`Object`，都会继承自某个类。下图是`Person`、`Student`的继承树：
+
+```ascii
+┌───────────┐
+│  Object   │
+└───────────┘
+      ▲
+      │
+┌───────────┐
+│  Person   │
+└───────────┘
+      ▲
+      │
+┌───────────┐
+│  Student  │
+└───────────┘
+```
+
+Java只允许一个class继承自一个类，因此，一个类有且仅有一个父类。只有`Object`特殊，它没有父类。
+
+
+
+为了让子类可以访问父类的字段，我们需要把`private`改为`protected`。用`protected`修饰的字段可以被子类访问：
+
+```java
+class Person {
+    protected String name;
+    protected int age;
+}
+
+class Student extends Person {
+    public String hello() {
+        return "Hello, " + name; // OK!
+    }
+}
+```
+
+因此，`protected`关键字可以把字段和方法的访问权限控制在继承树内部，一个`protected`字段和方法可以被其子类，以及子类的子类所访问.
+
+
+
+子类的构造方法可以通过`super()`调用父类的构造方法；
+
+```java
+    public Student(String name, int age, int score) {
+        super(name, age); // 调用父类的构造方法Person(String, int)
+        this.score = score;
+    }
+```
+
+
+
+可以安全地向上转型为更抽象的类型；
+
+如果`Student`是从`Person`继承下来的，那么，一个引用类型为`Person`的变量，能否指向`Student`类型的实例？
+
+```
+Person p = new Student(); // ???
+```
+
+测试一下就可以发现，这种指向是允许的！
+
+
+
+可以强制向下转型，最好借助`instanceof`判断；
+
+从Java 14开始，判断`instanceof`后，可以直接转型为指定变量，避免再次强制转型。例如，对于以下代码：
+
+```java
+Object obj = "hello";
+if (obj instanceof String) {
+    String s = (String) obj;
+    System.out.println(s.toUpperCase());
+}
+```
+
+可以改写如下:
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Object obj = "hello";
+        if (obj instanceof String s) {
+            // 可以直接使用变量s:
+            System.out.println(s.toUpperCase());
+        }
+    }
+}
+```
+
+这种使用`instanceof`的写法更加简洁。
+
+
+
+子类和父类的关系是is，has关系不能用继承。
+
+
+
+### 多态
+
+多态是指，针对某个类型的方法调用，其真正执行的方法取决于运行时期实际类型的方法。
+
+```java
+public void runTwice(Person p) {
+    p.run();
+    p.run();
+}
+```
+
+它传入的参数类型是`Person`，我们是无法知道传入的参数实际类型究竟是`Person`，还是`Student`，还是`Person`的其他子类，因此，也无法确定调用的是不是`Person`类定义的`run()`方法。
+
+所以，多态的特性就是，运行期才能动态决定调用的子类方法。对某个类型调用某个方法，执行的实际方法可能是某个子类的覆写方法。
+
+```java
+// 假设我们定义一种收入，需要给它报税，那么先定义一个Income类：
+class Income {
+    protected double income;
+
+    public Income(double income) {
+        this.income = income;
+    }
+
+    public double getTax() {
+        return income * 0.1; // 税率10%
+    }
+}
+
+// 对于工资收入，可以减去一个基数，那么我们可以从Income派生出SalaryIncome，并覆写getTax()：
+class Salary extends Income {
+    public Salary(double income) {
+        super(income);
+    }
+
+    @Override
+    public double getTax() {
+        if (income <= 5000) {
+            return 0;
+        }
+        return (income - 5000) * 0.2;
+    }
+}
+
+// 如果你享受国务院特殊津贴，那么按照规定，可以全部免税：
+class StateCouncilSpecialAllowance extends Income {
+    public StateCouncilSpecialAllowance(double income) {
+        super(income);
+    }
+
+    @Override
+    public double getTax() {
+        return 0;
+    }
+}
+
+// 现在，我们要编写一个报税的财务软件，对于一个人的所有收入进行报税，可以这么写：
+public class Main {
+    public static void main(String[] args) {
+        // 给一个有普通收入、工资收入和享受国务院特殊津贴的小伙伴算税:
+        Income[] incomes = new Income[] {
+            new Income(3000),
+            new Salary(7500),
+            new StateCouncilSpecialAllowance(15000)
+        };
+        System.out.println(totalTax(incomes));
+    }
+
+    public static double totalTax(Income... incomes) {
+        double total = 0;
+        for (Income income: incomes) {
+            total = total + income.getTax();
+        }
+        return total;
+    }
+}
+
+
+```
+
+
+
+
 
 ## 01-字符串
 
@@ -3244,8 +3510,6 @@ the quick brown fox jumps <b>over</b> the <b>lazy</b> dog.
 ```
 
 它实际上把任何4字符单词的前后用`<b>xxxx</b>`括起来。实现替换的关键就在于`" <b>$1</b> "`，它用匹配的分组子串`([a-z]{4})`替换了`$1`。
-
-
 
 
 
