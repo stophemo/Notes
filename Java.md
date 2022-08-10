@@ -3678,7 +3678,250 @@ split()
 
 
 
+# ---------尚硅谷java---
+
+## 数据类型
+
+### 基本数据类型
+
+​	整型 
+
+​		byte
+
+​		short
+
+​		int
+
+​		long 
+
+​			`long l = 1231232L`
+
+​	浮点型
+
+​		float 
+
+​			4字节
+
+​			`float f1 = 12.3f`
+
+​		double
+
+​			8字节
+
+​	字符型
+
+​		char
+
+​			2字节
+
+​	布尔型
+
+​		boolean
+
+​			1字节
+
+### 引用数据类型
+
+类
+
+接口
+
+数组
+
+### 基本数据类型之间的运算规则
+
+byte, short, int, long, float, double, char之间的运算
+
+（不包含boolean，）
+
+#### 1.自动类型提升
+
+byte、short、char -> int -> long -> float -> double 
+
+​	可转换为容量大的，不能转换为容量小的
+
+​	特别：当**byte、short、char**作运算时，按照asicll码，会自动转为**int**类型进行运算
+
+#### 2.强制类型转换
+
+可能会导致精度损失
+
+```java
+int i = 128;
+byte b = (byte)i;
+// b = -128
+```
 
 
 
+## String
+
+
+
+## 数组
+
+Java语言中数组必须先初始化，然后才可以使用。所谓初始化就是为数组的数组元素分配内存空间，并为每个数组元素附初始值。
+
+注意：数组完成初始化后，内存空间中针对该数组的各个元素就有个一个默认值：
+
+- 基本数据类型的整数类型（byte、short、int、long）默认值是0
+
+- 基本数据类型的浮点类型（float、double）默认值是0.0
+
+- 基本数据类型的字符类型（char）默认值是'\u0000'
+
+- 基本数据类型的布尔类型（boolean）默认值是false
+
+- 类型的引用类型（类、数组、接口、String）默认值是null
+
+
+
+初始化方式：
+
+一.静态初始化：初始化时由程序员显式指定每个数组元素的初始值，有系统决定数组的长度；
+
+1. arrayName = new type[]{element1,element2,element3...}
+
+   int[] intArr;
+   `intArr = new int[]{1,2,3,4,5,9};`
+
+2. 简化的静态初始化方式    
+
+   type[] arrayName = {element1,element2,element3...};
+
+​	`String[] strArr = {"张三","李四","王二麻"};`
+
+二.动态初始化：初始化时由程序员指定数组的长度，由系统初始化每个数组元素的默认值。
+
+​	arrayName = new type[length];
+
+​	`int[] price = new int[4];`
+
+
+
+数组一旦初始化，其长度就是确定的，不可修改
+
+
+
+### 二维数组
+
+```
+int[][] arr = new int[4][3];
+int[][] arr = new int[4][];
+```
+
+
+
+### 数组相关算法
+
+1. 数组元素的赋值：杨辉三角、回形数
+2. 求数值型数组中元素的最大值、最小值、平均数、总和等
+3. 数组的复制、反转、查找(线性查找、二分法查找)
+4. 数组元素的排序算法
+
+
+
+## 面对对象
+
+### 抽象类
+
+​	abstract修饰
+
+- 此类不能实例化
+- 抽象类中一定有构造器便于子类实例化时调用
+- 开发中，都会提供抽象类的子类，让子类对象实例化，完成相关操作
+
+### 内部类
+
+
+
+
+
+
+
+## 集合
+
+
+
+
+
+
+
+
+
+## IO
+
+
+
+### 输入输出
+
+#### Scanner
+
+```java
+Scanner scan = new Scanner (System.in);
+String name = scan.next();
+int age = scan.nextInt();
+double weight = scan.nextDouble();
+boolean  isLove = scan.nextBoolean();
+```
+
+
+
+#### 格式化输出
+
+```java
+// +199 199 c7 307 0xc7 0307
+System.out.printf("%+d %<d %<x %<o %<#x %<#o\n",199);
+
+// | 23| |23|
+System.out.printf("|% d| |%<d|\n",23);
+
+// hello 第5个字符是o,that's true
+System.out.printf("%s 第%d个字符是%c,that's %b\n","hello",5,'o',true);
+
+// 15 % 6 = 3
+System.out.printf("%2$d %% %1$d = %3$d\n",6,15, 15 % 6);
+
+// |  7.33| |007.33| |7.330000| 0x1.d51eb851eb852p2
+System.out.printf("|%6.2f| |%0<6.2f| |%<f| %<a\n",7.33);
+
+// | 211.79| |211.79 |
+System.out.printf("|%7.2f| |%<-7.2f|\n",211.79);
+
+// | -211.79| |(211.79)| |(-211.79)|
+System.out.printf("|%8.2f| |%<(8.2f| |(%<.2f)|\n",-211.79);
+
+// |-21171.3333| |-21,171.3333| |-2.1171e+04| |-2.117e+04|
+System.out.printf("|%.4f| |%<,.4f| |%<.4e| |%<.4g|\n",-21171.3333);
+
+String str = new String("tree");
+// Note: %h 格式符输出对象的散列码 和 调用对象的hashCode 得到的值并不相同
+// obj %h formatinput: 36739e,hashCode:3568542
+System.out.printf("obj %%h formatinput: %h,hashCode:%s\n",str,str.hashCode());
+
+// true 25 0.0032 含
+System.out.printf("%s %s %s %s\n",true,25,3.2e-3,'含');
+
+System.out.printf("|%n| \n","world");
+System.out.printf("|%n| \n");
+```
+
+结果
+
+```java
++199 199 c7 307 0xc7 0307
+| 23| |23|
+hello 第5个字符是o,that's true
+15 % 6 = 3
+|  7.33| |007.33| |7.330000| 0x1.d51eb851eb852p2
+| 211.79| |211.79 |
+| -211.79| |(211.79)| |(-211.79)|
+|-21171.3333| |-21,171.3333| |-2.1171e+04| |-2.117e+04|
+obj %h formatinput: 36739e,hashCode:3568542
+true 25 0.0032 含
+|
+| 
+|
+| 
+```
 

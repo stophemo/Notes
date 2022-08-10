@@ -43,8 +43,10 @@
 ### add
 
 `git add file` #.或*代表全部添加
- `git rm --cached ` 在commit之前撤销git add操作
- `git reset head` 好像比上面`git rm --cached`更方便  
+
+`git rm --cached ` 在commit之前撤销git add操作
+
+`git reset head` 好像比上面`git rm --cached`更方便  
 
 ### commit
 

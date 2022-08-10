@@ -1039,3 +1039,27 @@ SELECT id, name, score, dense_rank() over(ORDER BY score DESC) AS 'rank' FROM st
 SELECT id, name, score, row_number() over(ORDER BY score DESC) AS 'rank' FROM student 
 
 ![img](SQL.assets/20201020232738202.png)
+
+
+
+
+
+### WHERE可选条件
+
+```sql
+select *
+from table
+where 
+	参数 is null or 字段 = 参数
+and
+	参数 is null or 字段 = 参数
+```
+
+
+
+
+
+
+
+
+
