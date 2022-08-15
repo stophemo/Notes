@@ -2,6 +2,16 @@
 
 # SQL教程
 
+
+
+参考文档连接：
+
+https://www.pdai.tech/md/db/sql-lan/sql-lan.html
+
+https://www.liaoxuefeng.com/wiki/1177760294764384
+
+
+
 SQL是结构化查询语言的缩写，用来访问和操作数据库系统。SQL语句既可以查询数据库中的数据，也可以添加、更新和删除数据库中的数据，还可以对数据库进行管理和维护操作。不同的数据库，都支持SQL，这样，我们通过学习SQL这一种语言，就可以操作各种不同的数据库。
 
 ## NoSQL
@@ -622,6 +632,34 @@ FULL OUTER JOIN则是选出左右表都存在的记录：
 ![full-outer-join](SQL.assets/l-16587347882193.png)
 
 
+
+
+
+
+
+
+
+### 联合查询
+
+
+
+使用  **UNION**  来组合两个查询，如果第一个查询返回 M 行，第二个查询返回 N 行，那么组合查询的结果一般为 M+N 行。
+
+每个查询必须包含相同的列、表达式和聚集函数。
+
+默认会去除相同行，如果需要保留相同行，使用 UNION ALL。
+
+只能包含一个 ORDER BY 子句，并且必须位于语句的最后。
+
+```sql
+SELECT col
+FROM mytable
+WHERE col = 1
+UNION
+SELECT col
+FROM mytable
+WHERE col =2;
+```
 
 
 

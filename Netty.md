@@ -1,11 +1,9 @@
 # Netty
 
 
+来源链接：https://www.zhihu.com/question/24322387/answer/282001188
 
 ## 初识Netty
-
-作者：知乎用户
-链接：https://www.zhihu.com/question/24322387/answer/282001188
 
 作为一个学Java的，如果没有研究过Netty，那么你对Java语言的使用和理解仅仅停留在表面水平，会点SSH，写几个MVC，访问数据库和缓存，这些只是初等Java程序员干的事。如果你要进阶，想了解Java服务器的深层高阶知识，Netty绝对是一个必须要过的门槛。
 
