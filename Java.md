@@ -3857,6 +3857,49 @@ int[][] arr = new int[4][];
 
 
 
+## Map接口
+
+### HashMap 
+
+线程不安全，但是效率高 
+
+可以存储null的key和value
+
+底层：
+
+- jdk7及之前：数组 + 链表
+- jdk8：数组 + 链表 + 红黑树
+
+#### linkedHashMap
+
+在原有HashMap上添加了一对指针，指向前一个元素和后一个元素
+
+对于频繁的遍历操作，此类执行效率高于HashMap
+
+### TreeMap
+
+保证按照添加的key-value对 进行排序，实现排序遍历。此时考虑key的自然排序或定制排序
+
+底层使用红黑树
+
+### Hashtable
+
+古老的实现类，线程安全，但是效率低，
+
+不饿能存储null的key和value
+
+#### Properties
+
+常用来处理配置文件，key和value都是String类型。
+
+
+
+
+
+
+
+
+
 ## 面对对象
 
 ### 多态
@@ -3928,6 +3971,86 @@ java.lang.Object
 
 
 
+
+
+
+
+
+
+
+
+
+### Stream API
+
+#### Stream操作
+
+![image-20220818095735996](Java.assets/image-20220818095735996.png)
+
+
+
+#### Stream 特征
+
+1. Stream关注的是对数据的运算，与CPU打交道
+
+​    集合关注的是数据的存储，与内存打交道
+
+2. Stream 自己不会存储元素
+
+   Stream 不改变源对象相反，它们会返回一个持有结果的新Stream
+
+   Stream 操作时延迟执行的，这意味着它们会等到需要结果的时候才执行
+
+3. Stream 的执行流程
+
+   1> Stream 的实例化
+
+   2> 一系列的中间操作（过滤、映射、。。。）
+
+   3> 终止操作
+
+4. 说明
+
+   一个中间操作链，对数据源的数据进行处理
+
+   一旦执行终止操作，就执行中间操作链
+
+#### Steam使用
+
+##### 创建Stream方式
+
+1. 通过集合
+
+​    list.stream()
+
+2. 通过数组
+
+   Arrays.stream(arr)
+
+3. 通过Stream 的 of()
+
+​    Stream<Integer> stream = Stream.of(1,2,3,4,5);
+
+4. 创建无限流
+
+   迭代
+
+   ```java
+   public static<T> Stream<T> iterate(final T seed, final UnaryOperator<T> f)
+   ```
+
+   // 便利前10个偶数
+
+   Stream.iterate(0, t -> t + 2).limit(10).forEach(System.out::println);
+
+   
+
+   生成
+
+   ```java
+   public static<T> Stream<T> generate(Supplier<T> s)
+   ```
+
+   
 
 
 
