@@ -379,7 +379,7 @@ ${msg?replace("o","a")}<br>
 
 #### 字符串空值情况处理
 
-​	FreeMarker 的变量必须赋值，否则就会抛出异常。而对于 FreeMarker 来说，null 值和不存在的变 量是完全一样的，因为 FreeMarker 无法理解 null 值。
+​	FreeMarker 的变量必须赋值，否则就会抛出异常。而对于 FreeMarker 来说，null 值和不存在的变量是完全一样的，因为 FreeMarker 无法理解 null 值。
 
 ​	FreeMarker 提供两个运算符来避免空值：
 
