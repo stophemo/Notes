@@ -3672,13 +3672,13 @@ split()
 
 
 
-# ---------尚硅谷java---
+# ---------尚硅谷java--------
 
 alt + /
 
 ## 数据类型
 
-### 基本数据类型
+### 1.基本数据类型
 
 ​	整型 
 
@@ -3716,7 +3716,7 @@ alt + /
 
 ​			1字节
 
-### 引用数据类型
+### 2.引用数据类型
 
 类
 
@@ -3724,13 +3724,13 @@ alt + /
 
 数组
 
-### 基本数据类型之间的运算规则
+### 3.基本数据类型之间的运算规则
 
 byte, short, int, long, float, double, char之间的运算
 
 （不包含boolean，）
 
-#### 1.自动类型提升
+#### 1> 自动类型提升
 
 byte、short、char -> int -> long -> float -> double 
 
@@ -3738,7 +3738,7 @@ byte、short、char -> int -> long -> float -> double
 
 ​	特别：当**byte、short、char**作运算时，按照asicll码，会自动转为**int**类型进行运算
 
-#### 2.强制类型转换
+#### 2> 强制类型转换
 
 可能会导致精度损失
 
@@ -3750,7 +3750,7 @@ byte b = (byte)i;
 
 
 
-### 包装类
+### 4.包装类
 
 赋予基本数据类型面对对象的特性
 
@@ -3814,7 +3814,7 @@ Java语言中数组必须先初始化，然后才可以使用。所谓初始化�
 
 - 类型的引用类型（类、数组、接口、String）默认值是null
 
-
+### 1.初始化
 
 初始化方式：
 
@@ -3843,7 +3843,7 @@ Java语言中数组必须先初始化，然后才可以使用。所谓初始化�
 
 
 
-### 二维数组
+### 2.二维数组
 
 ```
 int[][] arr = new int[4][3];
@@ -3852,7 +3852,7 @@ int[][] arr = new int[4][];
 
 
 
-### 数组相关算法
+### 3.数组相关算法
 
 1. 数组元素的赋值：杨辉三角、回形数
 2. 求数值型数组中元素的最大值、最小值、平均数、总和等
@@ -3861,7 +3861,7 @@ int[][] arr = new int[4][];
 
 
 
-#### 二分查找：
+#### 1> 二分查找
 
 ```java
 //二分法查找：(熟悉)
@@ -3895,61 +3895,360 @@ int[][] arr = new int[4][];
 		}
 ```
 
+#### 2> 排序算法：
 
+**衡量优劣**：
 
-## Map接口
+- 时间复杂度
+- 空间复杂度
+- 稳定性
 
-### HashMap 
+**十大内部排序算法**：
 
-线程不安全，但是效率高 
-
-可以存储null的key和value
-
-底层：
-
-- jdk7及之前：数组 + 链表
-- jdk8：数组 + 链表 + 红黑树
-
-#### linkedHashMap
-
-在原有HashMap上添加了一对指针，指向前一个元素和后一个元素
-
-对于频繁的遍历操作，此类执行效率高于HashMap
-
-### TreeMap
-
-保证按照添加的key-value对 进行排序，实现排序遍历。此时考虑key的自然排序或定制排序
-
-底层使用红黑树
-
-### Hashtable
-
-古老的实现类，线程安全，但是效率低，
-
-不饿能存储null的key和value
-
-#### Properties
-
-常用来处理配置文件，key和value都是String类型。
+- 选择排序
+  - 直接选择排序
+  - **堆排序**
+- 交换排序
+  - **冒泡排序**
+  - **快速排序**
+- 插入排序
+  - 直接插入排序
+  - 折半插入排序
+  - Shell排序
+- **归并排序**
+- 桶式排序
+- 基数排序
 
 
 
 
 
+| 排序算法 | 平均时间         | 稳定性 | 备注                              |
+| -------- | ---------------- | ------ | --------------------------------- |
+| 冒泡排序 | O(n2)            | 稳定   | n小时较好                         |
+| 快速排序 | O(nlogn)         | 不稳定 | n大、元素较无序时较好             |
+| 插入排序 | O(n2)            | 稳定   | n小、元素基本有序时较好           |
+| 希尔排序 | O(n1.3)          | 不稳定 | n小时较好                         |
+| 选择排序 | O(n2)            | 不稳定 | n小时较好                         |
+| 归并排序 | O(nlogn)         | 稳定   | n大时较好                         |
+| 堆排序   | O(nlogn)         | 不稳定 | n大时较好                         |
+| 计数排序 | O(n + k)         | 稳定   | n是输入数组长度 k是最大的数的大小 |
+| 桶排序   | O(N+NlogN-NlogM) | 稳定   | N个数据平均的分配到M个桶中        |
+| 基数排序 | O(d(n+r))        | 稳定   | r为基数 d为位数                   |
 
+
+
+##### 1^ 冒泡排序
+
+```java
+int[] arr = new int[]{43,32,76,-98,0,64,33,-21,32,99};
+		
+		//冒泡排序
+		for(int i = 0;i < arr.length - 1;i++){
+			
+			for(int j = 0;j < arr.length - 1 - i;j++){
+				
+				if(arr[j] > arr[j + 1]){
+					int temp = arr[j];
+					arr[j] = arr[j + 1];
+					arr[j + 1] = temp;
+				}
+				
+			}
+			
+		}
+```
+
+##### 2^ 快速排序
+
+```java
+/**
+ * 快速排序
+ * 通过一趟排序将待排序记录分割成独立的两部分，其中一部分记录的关键字均比另一部分关键字小，
+ * 则分别对这两部分继续进行排序，直到整个序列有序。
+ */
+public class QuickSort {
+	private static void swap(int[] data, int i, int j) {
+		int temp = data[i];
+		data[i] = data[j];
+		data[j] = temp;
+	}
+
+	private static void subSort(int[] data, int start, int end) {
+		if (start < end) {
+			int base = data[start];
+			int low = start;
+			int high = end + 1;
+			while (true) {
+				while (low < end && data[++low] - base <= 0)
+					;
+				while (high > start && data[--high] - base >= 0)
+					;
+				if (low < high) {
+					swap(data, low, high);
+				} else {
+					break;
+				}
+			}
+			swap(data, start, high);
+			
+			subSort(data, start, high - 1);//递归调用
+			subSort(data, high + 1, end);
+		}
+	}
+	public static void quickSort(int[] data){
+		subSort(data,0,data.length-1);
+	}
+	
+	
+	public static void main(String[] args) {
+		int[] data = { 9, -16, 30, 23, -30, -49, 25, 21, 30 };
+		System.out.println("排序之前：\n" + java.util.Arrays.toString(data));
+		quickSort(data);
+		System.out.println("排序之后：\n" + java.util.Arrays.toString(data));
+	}
+}
+```
 
 
 
 ## 面对对象
 
-### 多态
+### 1.类与对象
+
+#### 1> 属性
+
+属性（成员变量） vs 局部变量
+ * 1.相同点：
+
+   * 1.1  定义变量的格式：数据类型  变量名 = 变量值
+   * 1.2 先声明，后使用
+   * 1.3 变量都有其对应的作用域 
+
+ * 2.不同点：
+
+   * 2.1 在类中声明的位置的不同
+
+     属性：直接定义在类的一对{}内
+
+     局部变量：声明在方法内、方法形参、代码块内、构造器形参、构造器内部的变量
+
+   * 2.2 关于权限修饰符的不同
+
+     属性：可以在声明属性时，指明其权限，使用权限修饰符。
+
+     常用的权限修饰符：private、public、缺省、protected  --->封装性
+
+     目前，大家声明属性时，都使用缺省就可以了。
+
+     局部变量：不可以使用权限修饰符。
+
+   * 2.3 默认初始化值的情况：
+
+     属性：类的属性，根据其类型，都有默认初始化值。
+
+     ​	整型（byte、short、int、long）：0
+
+     ​	浮点型（float、double）：0.0
+
+     ​	字符型（char）：0  （或'\u0000'）
+
+     ​	布尔型（boolean）：false
+
+     ​	引用数据类型（类、数组、接口）：null
+
+     局部变量：没有默认初始化值。
+
+     意味着，我们在调用局部变量之前，一定要显式赋值。
+
+     特别地：形参在调用时，我们赋值即可。
+
+   * 2.4 在内存中加载的位置：
+
+     属性：加载到堆空间中   （非static）
+
+     局部变量：加载到栈空间
+
+
+
+#### 2> 方法
+
+#### 3> 构造器
+
+#### 4> 代码块
+
+#### 5> 内部类
+
+#### 6> 匿名对象
+
+- 匿名对象的使用
+
+1.理解：我们创建的对象，没有显式的赋给一个变量名。即为匿名对象
+
+2.特征：匿名对象只能调用一次。
+
+3.使用：如下
+
+```java
+public class InstanceTest {
+	public static void main(String[] args) {
+		Phone p = new Phone();
+//		p = null;
+		System.out.println(p);
+		
+		p.sendEmail();
+		p.playGame();
+		
+		//匿名对象
+//		new Phone().sendEmail();
+//		new Phone().playGame();
+		
+		new Phone().price = 1999;
+		new Phone().showPrice();//0.0
+		
+		//**********************************
+		PhoneMall mall = new PhoneMall();
+//		mall.show(p);
+		//匿名对象的使用
+		mall.show(new Phone());
+		
+	}
+}
+
+class PhoneMall{
+	public void show(Phone phone){
+		phone.sendEmail();
+		phone.playGame();
+	}
+}
+
+class Phone{
+	double price;//价格
+	public void sendEmail(){
+		System.out.println("发送邮件");
+	}
+	public void playGame(){
+		System.out.println("玩游戏");
+	}
+	public void showPrice(){
+		System.out.println("手机价格为：" + price);
+	}
+}
+```
+
+
+
+### 2.三大特性
+
+#### 1> 继承
+
+例题
+
+假定Base b = new Derived（）; 调用执行b.methodOne（）后，输出结果是什么？
+
+```java
+public class Base
+{
+   public void methodOne()
+   {
+      System.out.print("A");
+      methodTwo();
+   }
+ 
+   public void methodTwo()
+   {
+      System.out.print("B");
+   }
+}
+ 
+public class Derived extends Base
+{
+   public void methodOne()
+   {
+      super.methodOne();
+      System.out.print("C");
+   }
+ 
+   public void methodTwo()
+   {
+      super.methodTwo();
+      System.out.print("D");
+   }
+}
+```
+
+> 答案： ABDC
+
+解析：
+
+```java
+//子类方法：
+public class Derived extends Base
+{
+   public void methodOne()//Step1：在derived中调用methodOne方法
+   {
+      super.methodOne();//step2：调用父类methodOne方法
+      System.out.print("C");
+   }
+   
+}
+//跳转到父类：
+public class Base
+{
+   public void methodOne()//step3：执行父类methodOne方法
+   {
+      System.out.print("A");
+      methodTwo();//step4：跳转子类methodTwo覆盖方法
+   }
+ 
+}
+//跳转到子类：
+public class Derived extends Base
+{
+   public void methodTwo()//step5：执行子类methodTwo覆盖方法
+   {
+      super.methodTwo();//step6：跳转父类methodTwo方法
+      System.out.print("D");
+   }
+}
+//跳转到父类：
+public class Base
+{
+   public void methodTwo()//step7：执行父类methodTwo方法
+   {
+      System.out.print("B");
+   }
+ 
+}
+//跳转到子类：
+public class Derived extends Base
+{
+   public void methodTwo()
+   {
+      super.methodTwo();
+      System.out.print("D");//step8：继续执行子类methodTwo方法
+   }
+   public void methodOne()
+   {
+      super.methodOne();
+      System.out.print("C");//step9：super.methodOne()执行完毕，继续执行子类methodOne方法
+   }
+}
+//故答案为ABDC
+```
+
+
+
+#### 2> 封装
+
+
+
+#### 3> 多态
 
 前提条件：
 
 - 类的继承
 - 方法的重写
-
-
 
 > 父类引用指向子类对象
 >
@@ -3963,20 +4262,9 @@ int[][] arr = new int[4][];
 
 ​	编译时类型、运行时类型。----动态绑定
 
+#### 4> (抽象性)
 
-
-### Object类
-
-java.lang.Object
-
-#### == 与 equals
-
-1. == 既可以比较基本类型也可以比较引用类型。对于基本类型就是比较值，对于引用类型就是比较内存地址
-2. equals的话，它是属于java.lang.Object类里面的方法，如果该方法没有被重写过，默认就也是==；我们知道诸如String等类的equals方法是被重写过的，而且String类在日常开发中用得也比较多，久而久之，就形成了equals时比较值得错误观点。
-3. 具体要看自定义类里有没有重写Object的equals方法来判断。
-4. 通常情况下，重写equals方法会比较类中的相应属性是否都相等。
-
-### 抽象类
+##### 抽象类
 
 ​	abstract修饰
 
@@ -3984,7 +4272,67 @@ java.lang.Object
 - 抽象类中一定有构造器便于子类实例化时调用
 - 开发中，都会提供抽象类的子类，让子类对象实例化，完成相关操作
 
-### 内部类
+
+
+### 3.其他关键字
+
+#### 1> return
+
+#### 2> instanceof
+
+#### 3> equals
+
+== 与 equals 的区别
+
+1. == 既可以比较基本类型也可以比较引用类型。对于基本类型就是比较值，对于引用类型就是比较内存地址
+2. equals的话，它是属于java.lang.Object类里面的方法，如果该方法没有被重写过，默认就也是==；我们知道诸如String等类的equals方法是被重写过的，而且String类在日常开发中用得也比较多，久而久之，就形成了equals时比较值得错误观点。
+3. 具体要看自定义类里有没有重写Object的equals方法来判断。
+4. 通常情况下，重写equals方法会比较类中的相应属性是否都相等。
+
+#### 4> static
+
+static关键字的使用
+
+1.static:静态的
+2.static可以用来修饰：属性、方法、代码块、内部类
+*
+3.使用static修饰属性：静态变量（或类变量）
+      3.1 属性，按是否使用static修饰，又分为：静态属性  vs 非静态属性(实例变量)
+         实例变量：我们创建了类的多个对象，每个对象都独立的拥有一套类中的非静态属性。当修改其中一个对象中的
+             非静态属性时，不会导致其他对象中同样的属性值的修改。
+      静态变量：我们创建了类的多个对象，多个对象共享同一个静态变量。当通过某一个对象修改静态变量时，会导致
+             其他对象调用此静态变量时，是修改过了的。
+      3.2 static修饰属性的其他说明：
+         ① 静态变量随着类的加载而加载。可以通过"类.静态变量"的方式进行调用
+         ② 静态变量的加载要早于对象的创建。
+         ③ 由于类只会加载一次，则静态变量在内存中也只会存在一份：存在方法区的静态域中。
+  	     ④      类变量    实例变量
+            类   yes           no
+            对象          yes         yes
+
+  	3.3 静态属性举例：System.out; Math.PI;
+
+ 4.使用static修饰方法：静态方法
+      ① 随着类的加载而加载，可以通过"类.静态方法"的方式进行调用
+      ②        静态方法   非静态方法
+          类       yes       no
+          对象           yes       yes
+      ③ 静态方法中，只能调用静态的方法或属性
+        非静态方法中，既可以调用非静态的方法或属性，也可以调用静态的方法或属性
+
+ 5. static注意点：
+    5.1 在静态的方法内，不能使用this关键字、super关键字
+    5.2 关于静态属性和静态方法的使用，大家都从生命周期的角度去理解。
+
+ 6. 开发中，如何确定一个属性是否要声明为static的？
+      > 属性是可以被多个对象所共享的，不会随着对象的不同而不同的。
+      > 类中的常量也常常声明为static
+
+   开发中，如何确定一个方法是否要声明为static的？
+       > 操作静态属性的方法，通常设置为static的
+     > 工具类中的方法，习惯上声明为static的。 比如：Math、Arrays、Collections
+
+#### 5> final
 
 
 
@@ -3992,23 +4340,17 @@ java.lang.Object
 
 
 
+## 设计模式
 
-
-
-
-### 设计模式
-
-#### 单例模式
+### 1.单例模式
 
 只能存在一个对象实例
 
 
 
-饿汉式
+#### 1> 饿汉式
 
-懒汉式
-
-
+#### 2> 懒汉式
 
 
 
@@ -4017,16 +4359,6 @@ java.lang.Object
 
 
 ## 集合
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -4102,7 +4434,45 @@ java.lang.Object
    public static<T> Stream<T> generate(Supplier<T> s)
    ```
 
-   
+
+
+
+## Map接口
+
+### HashMap 
+
+线程不安全，但是效率高 
+
+可以存储null的key和value
+
+底层：
+
+- jdk7及之前：数组 + 链表
+- jdk8：数组 + 链表 + 红黑树
+
+#### linkedHashMap
+
+在原有HashMap上添加了一对指针，指向前一个元素和后一个元素
+
+对于频繁的遍历操作，此类执行效率高于HashMap
+
+### TreeMap
+
+保证按照添加的key-value对 进行排序，实现排序遍历。此时考虑key的自然排序或定制排序
+
+底层使用红黑树
+
+### Hashtable
+
+古老的实现类，线程安全，但是效率低，
+
+不饿能存储null的key和value
+
+#### Properties
+
+常用来处理配置文件，key和value都是String类型。
+
+
 
 
 
@@ -4186,7 +4556,22 @@ true 25 0.0032 含
 
 
 
+# -----------注解与反射--------------
 
+from 狂神
+
+
+
+## 内置注解
+
+- @Override  重写的注解
+- @Deprecate  不推荐使用，但是可以使用，或者存在更好地方式
+- @SuppressWarnings()  镇压警告
+  - SuppressWarnings("all") 
+  - SuppressWarnings("unchecked")
+  - SuppressWarnings(value={"unchecked","deprecation"})
+
+## 元注解
 
 
 
