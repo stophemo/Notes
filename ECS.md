@@ -114,3 +114,4 @@ nginx.exe
 	taskkill /f /t /im nginx.exe
 ```
 
+try_files $uri $uri/ /index.html;
