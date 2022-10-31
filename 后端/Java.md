@@ -5038,3 +5038,197 @@ public void testNumberCalculate() {
 - 代码调测debug不便
 - 程序员从历史写法切换到Stream时，需要一定的适应时间
 
+
+
+
+
+
+
+
+
+
+
+# Java反射
+
+> Java 反射机制在程序**运行时**，对于任意一个类，都能够知道这个类的所有属性和方法；对于任意一个对象，都能够调用它的任意一个方法和属性。这种 **动态的获取信息** 以及 **动态调用对象的方法** 的功能称为 **java 的反射机制**。
+
+## 基本使用
+
+### Class
+
+> 内存中只有一个 Class 对象的原因要牵扯到 `JVM 类加载机制`的`双亲委派模型`，它保证了程序运行时，`加载类`时每个类在内存中仅会产生一个`Class对象`。在这里我不打算详细展开说明，可以简单地理解为 JVM 帮我们保证了**一个类在内存中至多存在一个 Class 对象**。
+
+#### 获取类的Class对象：
+
+- `类名.class`：这种获取方式只有在`编译`前已经声明了该类的类型才能获取到 Class 对象
+
+```java
+Class clazz = SmallPineapple.class;
+```
+
+- `实例.getClass()`：通过实例化对象获取该实例的 Class 对象
+
+```java
+SmallPineapple sp = new SmallPineapple();
+Class clazz = sp.getClass();
+```
+
+- `Class.forName(className)`：通过类的**全限定名**获取该类的 Class 对象
+
+```java
+Class clazz = Class.forName("com.bean.smallpineapple");
+```
+
+
+
+#### 构造类的实例化对象
+
+通过反射构造一个类的实例方式有`2`种：
+
+- Class 对象调用`newInstance()`方法
+
+```java
+Class clazz = Class.forName("com.bean.SmallPineapple");
+SmallPineapple smallPineapple = (SmallPineapple) clazz.newInstance();
+smallPineapple.getInfo();
+// [null 的年龄是：0]
+```
+
+即使 SmallPineapple 已经显式定义了构造方法，通过 newInstance()  创建的实例中，所有属性值都是对应类型的`初始值`，因为 newInstance() 构造实例会**调用默认无参构造器**。
+
+- Constructor 构造器调用`newInstance()`方法
+
+```java
+Class clazz = Class.forName("com.bean.SmallPineapple");
+Constructor constructor = clazz.getConstructor(String.class, int.class);
+constructor.setAccessible(true);
+SmallPineapple smallPineapple2 = (SmallPineapple) constructor.newInstance("小菠萝", 21);
+smallPineapple2.getInfo();
+// [小菠萝 的年龄是：21]
+```
+
+
+
+### Field
+
+#### 获取类中的变量（Field）
+
+- Field[] getFields()：获取类中所有被`public`修饰的所有变量
+- Field getField(String name)：根据**变量名**获取类中的一个变量，该**变量必须被public修饰**
+- Field[] getDeclaredFields()：获取类中所有的变量，但**无法获取继承下来的变量**
+- Field getDeclaredField(String name)：根据姓名获取类中的某个变量，**无法获取继承下来的变量**
+
+
+
+每种功能内部以 Declared 细分为`2`类：
+
+> 有`Declared`修饰的方法：可以获取该类内部包含的**所有**变量、方法和构造器，但是**无法获取继承下来的信息**
+>
+> 无`Declared`修饰的方法：可以获取该类中`public`修饰的变量、方法和构造器，可**获取继承下来的信息**
+
+如果想获取类中**所有的（包括继承）**变量、方法和构造器，则需要同时调用`getXXXs()`和`getDeclaredXXXs()`两个方法，用`Set`集合存储它们获得的变量、构造器和方法，以防两个方法获取到相同的东西。
+
+例如：要获取SmallPineapple获取类中**所有的变量**，代码应该是下面这样写。
+
+```java
+Class clazz = Class.forName("com.bean.SmallPineapple");
+// 获取 public 属性，包括继承
+Field[] fields1 = clazz.getFields();
+// 获取所有属性，不包括继承
+Field[] fields2 = clazz.getDeclaredFields();
+// 将所有属性汇总到 set
+Set<Field> allFields = new HashSet<>();
+allFields.addAll(Arrays.asList(fields1));
+allFields.addAll(Arrays.asList(fields2));
+```
+
+### Constructor
+
+#### 获取类的构造器（Constructor）
+
+- Constuctor[] getConstructors()：获取类中所有被`public`修饰的构造器
+- Constructor getConstructor(Class...<?> paramTypes)：根据`参数类型`获取类中某个构造器，该构造器必须被`public`修饰
+- Constructor[] getDeclaredConstructors()：获取类中所有构造器
+- Constructor getDeclaredConstructor(class...<?> paramTypes)：根据`参数类型`获取对应的构造器
+
+### Method
+
+#### 获取类中的方法（Method）
+
+- Method[] getMethods()：获取类中被`public`修饰的所有方法
+- Method getMethod(String name, Class...<?> paramTypes)：根据**名字和参数类型**获取对应方法，该方法必须被`public`修饰
+- Method[] getDeclaredMethods()：获取`所有`方法，但**无法获取继承下来的方法**
+- Method getDeclaredMethod(String name, Class...<?> paramTypes)：根据**名字和参数类型**获取对应方法，**无法获取继承下来的方法**
+
+
+
+### 注解
+
+#### 获取注解
+
+获取注解单独拧了出来，因为它并不是专属于 Class 对象的一种信息，每个变量，方法和构造器都可以被注解修饰，所以在反射中，Field，Constructor 和 Method 类对象都可以调用下面这些方法获取标注在它们之上的注解。
+
+- Annotation[] getAnnotations()：获取该对象上的**所有注解**
+- Annotation getAnnotation(Class annotaionClass)：传入`注解类型`，获取该对象上的特定一个注解
+- Annotation[] getDeclaredAnnotations()：获取该对象上的显式标注的所有注解，无法获取`继承`下来的注解
+- Annotation getDeclaredAnnotation(Class annotationClass)：根据`注解类型`，获取该对象上的特定一个注解，无法获取`继承`下来的注解
+
+只有注解的`@Retension`标注为`RUNTIME`时，才能够通过反射获取到该注解，@Retension 有`3`种保存策略：
+
+- `SOURCE`：只在**源文件(.java)**中保存，即该注解只会保留在源文件中，**编译时编译器会忽略该注解**，例如 @Override 注解
+- `CLASS`：保存在**字节码文件(.class)\**中，注解会随着编译跟随字节码文件中，但是\**运行时**不会对该注解进行解析
+- `RUNTIME`：一直保存到**运行时**，**用得最多的一种保存策略**，在运行时可以获取到该注解的所有信息
+
+像下面这个例子，SmallPineapple 类继承了抽象类`Pineapple`，`getInfo()`方法上标识有 @Override 注解，且在子类中标注了`@Transient`注解，在运行时获取子类重写方法上的所有注解，只能获取到`@Transient`的信息。
+
+```java
+public abstract class Pineapple {
+    public abstract void getInfo();
+}
+public class SmallPineapple extends Pineapple {
+    @Transient
+    @Override
+    public void getInfo() {
+        System.out.print("小菠萝的身高和年龄是:" + height + "cm ; " + age + "岁");
+    }
+}
+```
+
+### 调用方法
+
+#### 通过反射调用方法
+
+通过反射获取到某个 Method 类对象后，可以通过调用`invoke`方法执行。
+
+- `invoke(Oject obj, Object... args)`：参数``1`指定调用该方法的**对象**，参数`2`是方法的参数列表值。
+
+如果调用的方法是**静态方法**，参数1只需要传入`null`，因为静态方法不与某个对象有关，只与某个类有关。
+
+可以像下面这种做法，通过反射实例化一个对象，然后获取`Method`方法对象，调用`invoke()`指定`SmallPineapple`的`getInfo()`方法。
+
+```java
+Class clazz = Class.forName("com.bean.SmallPineapple");
+Constructor constructor = clazz.getConstructor(String.class, int.class);
+constructor.setAccessible(true);
+SmallPineapple sp = (SmallPineapple) constructor.newInstance("小菠萝", 21);
+Method method = clazz.getMethod("getInfo");
+if (method != null) {
+    method.invoke(sp, null);
+}
+// [小菠萝的年龄是：21]
+```
+
+## 应用场景
+
+
+
+## 优劣
+
+反射的**优点**：
+
+- **增加程序的灵活性**：面对需求变更时，可以灵活地实例化不同对象
+
+但是，有得必有失，一项技术不可能只有优点没有缺点，反射也有**两个比较隐晦的缺点**：
+
+- **破坏类的封装性**：可以强制访问 private 修饰的信息
+- **性能损耗**：反射相比直接实例化对象、调用方法、访问变量，中间需要非常多的**检查步骤和解析步骤**，JVM无法对它们优化。
